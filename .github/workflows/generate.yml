@@ -22,7 +22,43 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # ── Lightweight change detection (no Python, no deps) ──────────
+  check:
+    if: ${{ inputs.force != true }}
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.hash.outputs.changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check feed for changes
+        id: hash
+        env:
+          ICS_FEED_URL: ${{ vars.ICS_FEED_URL }}
+        run: |
+          FEED_URL="${ICS_FEED_URL:-https://orfe.princeton.edu/feeds/events/ical.ics?tid=491}"
+          # Hash must match Python's compute_feed_hash():
+          #   filter DTSTAMP lines, strip \r, join with \n (no trailing newline), SHA-256
+          CURRENT=$(curl -fsSL "$FEED_URL" | tr -d '\r' | grep -v '^DTSTAMP' | perl -pe 'chomp if eof' | sha256sum | cut -d' ' -f1)
+          STORED=""
+          if [ -f .feed_hash ]; then
+            STORED=$(tr -d '[:space:]' < .feed_hash)
+          fi
+          echo "current=$CURRENT"
+          echo "stored=$STORED"
+          if [ "$CURRENT" = "$STORED" ]; then
+            echo "Feed unchanged"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Feed changed"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ── Full generation (only when feed changed or force) ──────────
   generate:
+    needs: check
+    if: ${{ always() && (needs.check.outputs.changed == 'true' || needs.check.result == 'skipped') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -53,10 +89,7 @@ jobs:
           ICS_FEED_URL: ${{ vars.ICS_FEED_URL }}
           BYPASS_HEADER: ${{ secrets.BYPASS_HEADER }}
         run: |
-          set -- --output-dir output --verbose
-          if [ "${{ inputs.force }}" = "true" ]; then
-            set -- "$@" --force
-          fi
+          set -- --output-dir output --verbose --force
           if [ -n "$ICS_FEED_URL" ]; then
             set -- "$@" --feed-url "$ICS_FEED_URL"
           fi
