@@ -53,17 +53,17 @@ jobs:
           ICS_FEED_URL: ${{ vars.ICS_FEED_URL }}
           BYPASS_HEADER: ${{ secrets.BYPASS_HEADER }}
         run: |
-          ARGS="--output-dir output --verbose"
+          set -- --output-dir output --verbose
           if [ "${{ inputs.force }}" = "true" ]; then
-            ARGS="$ARGS --force"
+            set -- "$@" --force
           fi
           if [ -n "$ICS_FEED_URL" ]; then
-            ARGS="$ARGS --feed-url $ICS_FEED_URL"
+            set -- "$@" --feed-url "$ICS_FEED_URL"
           fi
           if [ -n "$BYPASS_HEADER" ]; then
-            ARGS="$ARGS --bypass-header \"$BYPASS_HEADER\""
+            set -- "$@" --bypass-header "$BYPASS_HEADER"
           fi
-          fpo-flyers $ARGS
+          fpo-flyers "$@"
           # Check if any PDFs were generated
           if ls output/*.pdf 1>/dev/null 2>&1; then
             echo "has_pdfs=true" >> "$GITHUB_OUTPUT"
