@@ -1,0 +1,107 @@
+name: Generate FPO Flyers
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Force regeneration (skip change detection)"
+        required: false
+        default: "false"
+        type: boolean
+  schedule:
+    # Weekdays at noon UTC
+    - cron: "0 12 * * 1-5"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libpango-1.0-0 libpangocairo-1.0-0 \
+            libgdk-pixbuf-2.0-0 libffi-dev libcairo2 \
+            fonts-liberation
+
+      - name: Install Python dependencies
+        run: pip install ".[test]"
+
+      - name: Run unit tests
+        run: python -m pytest tests/unit/ -v
+
+      - name: Generate flyers
+        id: generate
+        env:
+          ICS_FEED_URL: ${{ vars.ICS_FEED_URL }}
+          BYPASS_HEADER: ${{ secrets.BYPASS_HEADER }}
+        run: |
+          ARGS="--output-dir output --verbose"
+          if [ "${{ inputs.force }}" = "true" ]; then
+            ARGS="$ARGS --force"
+          fi
+          if [ -n "$ICS_FEED_URL" ]; then
+            ARGS="$ARGS --feed-url $ICS_FEED_URL"
+          fi
+          if [ -n "$BYPASS_HEADER" ]; then
+            ARGS="$ARGS --bypass-header \"$BYPASS_HEADER\""
+          fi
+          fpo-flyers $ARGS
+          # Check if any PDFs were generated
+          if ls output/*.pdf 1>/dev/null 2>&1; then
+            echo "has_pdfs=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_pdfs=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit hash file
+        if: steps.generate.outputs.has_pdfs == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .feed_hash
+          git diff --cached --quiet || git commit -m "[skip ci] Update feed hash"
+          git push
+
+      - name: Build site
+        if: steps.generate.outputs.has_pdfs == 'true'
+        run: |
+          mkdir -p _site
+          cp docs/index.html _site/
+          cp docs/style.css _site/
+          cp output/*.pdf _site/
+          # Generate a JSON manifest of PDFs for the index page
+          cd _site
+          echo "[" > manifest.json
+          first=true
+          for f in *.pdf; do
+            [ "$f" = "*.pdf" ] && break
+            if [ "$first" = true ]; then first=false; else echo "," >> manifest.json; fi
+            echo "  \"$f\"" >> manifest.json
+          done
+          echo "]" >> manifest.json
+
+      - name: Upload Pages artifact
+        if: steps.generate.outputs.has_pdfs == 'true'
+        uses: actions/upload-pages-artifact@v3
+
+      - name: Deploy to GitHub Pages
+        if: steps.generate.outputs.has_pdfs == 'true'
+        uses: actions/deploy-pages@v4

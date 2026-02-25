@@ -1,0 +1,21 @@
+services:
+  unit-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    command: ["-v", "tests/unit/", "-m", "not integration"]
+
+  integration-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    command: ["-v", "tests/integration/", "-m", "integration"]
+
+  generate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./output:/app/output
+      - ./.feed_hash:/app/.feed_hash
+    command: ["--output-dir", "/app/output", "--force", "--verbose"]

@@ -1,0 +1,33 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:princeton-site-builder
+X-WR-CALNAME:Operations Research & Financial Engineering
+BEGIN:VEVENT
+UID:ps_events:12281:delta:0
+DTSTART:20260302T180000Z
+SEQUENCE:0
+TRANSP:TRANSPARENT
+DTEND:20260302T210000Z
+URL:https://orfe.princeton.edu/events/2026/fpo-shange-tang
+LOCATION:125 - Sherrerd Hall
+SUMMARY:FPO\, Shange Tang
+CLASS:PUBLIC
+DESCRIPTION:The examining committee members are Professors Jianqing Fan (Chair of the Committee)\, Liza Rebrova\, and Jason Klusowski.
+CATEGORIES:FPO
+DTSTAMP:20260225T162101Z
+END:VEVENT
+BEGIN:VEVENT
+UID:ps_events:99999:delta:0
+DTSTART:20260415T170000Z
+SEQUENCE:0
+TRANSP:TRANSPARENT
+DTEND:20260415T190000Z
+URL:https://orfe.princeton.edu/events/2026/fpo-jane-doe
+LOCATION:101 - Friend Center
+SUMMARY:FPO\, Jane Doe
+CLASS:PUBLIC
+DESCRIPTION:The examining committee members are Professors Alice Smith (Chair of the Committee)\, Bob Jones\, and Carol White.
+CATEGORIES:FPO
+DTSTAMP:20260225T162101Z
+END:VEVENT
+END:VCALENDAR

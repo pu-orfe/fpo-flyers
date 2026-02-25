@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68.0", "setuptools-scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fpo-flyers"
+version = "1.0.0"
+description = "Automated FPO flyer generation for Princeton ORFE"
+requires-python = ">=3.11"
+dependencies = [
+    "icalendar>=6.0",
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+    "Jinja2>=3.1",
+    "WeasyPrint>=62.0",
+    "click>=8.1",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "responses>=0.25",
+]
+
+[project.scripts]
+fpo-flyers = "fpo_flyers.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+fpo_flyers = ["templates/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "integration: marks tests that hit live network (deselect with '-m \"not integration\"')",
+]

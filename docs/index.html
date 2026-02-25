@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FPO Flyers — Princeton ORFE</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>FPO Flyers</h1>
+    <p>Final Public Oral Examination announcements — Princeton ORFE</p>
+  </header>
+  <main>
+    <div id="flyers">
+      <p class="loading">Loading flyers&hellip;</p>
+    </div>
+  </main>
+  <footer>
+    <p>Automatically generated from the
+      <a href="https://orfe.princeton.edu/feeds/events/ical.ics?tid=491">ORFE ICS feed</a>.
+    </p>
+  </footer>
+  <script>
+    fetch('manifest.json')
+      .then(r => r.json())
+      .then(files => {
+        const container = document.getElementById('flyers');
+        container.innerHTML = '';
+        if (files.length === 0) {
+          container.innerHTML = '<p>No flyers currently available.</p>';
+          return;
+        }
+        const ul = document.createElement('ul');
+        files.forEach(f => {
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = f;
+          a.textContent = f.replace('.pdf', '').replace(/_/g, ' ');
+          li.appendChild(a);
+          ul.appendChild(li);
+        });
+        container.appendChild(ul);
+      })
+      .catch(() => {
+        document.getElementById('flyers').innerHTML =
+          '<p>No flyers currently available.</p>';
+      });
+  </script>
+</body>
+</html>
