@@ -9,8 +9,7 @@ on:
         default: "false"
         type: boolean
   schedule:
-    # Weekdays at noon UTC
-    - cron: "0 12 * * 1-5"
+    - cron: "*/30 * * * *"
 
 permissions:
   contents: write
