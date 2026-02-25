@@ -57,9 +57,8 @@ class FPOEvent:
         """e.g. '1:00 pm'."""
         t = self.start_eastern
         hour = t.hour % 12 or 12
-        minute = f":{t.minute:02d}" if t.minute else ""
         period = "am" if t.hour < 12 else "pm"
-        return f"{hour}{minute} {period}"
+        return f"{hour}:{t.minute:02d} {period}"
 
     @property
     def formatted_location(self) -> str:

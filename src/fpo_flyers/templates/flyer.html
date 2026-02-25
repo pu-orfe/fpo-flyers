@@ -5,7 +5,7 @@
 <style>
   @page {
     size: letter;
-    margin: 1in 0.9in;
+    margin: 0.75in 0.9in;
   }
   body {
     font-family: "Liberation Serif", "Times New Roman", serif;
@@ -13,6 +13,10 @@
     margin: 0;
     padding: 0;
     line-height: 1.4;
+  }
+  .border-box {
+    border: 2pt solid black;
+    padding: 0.6in 0.4in 0.5in;
   }
   .announcement {
     font-size: 48pt;
@@ -36,7 +40,7 @@
   .candidate {
     font-size: 24pt;
     font-weight: bold;
-    margin: 0.3em 0;
+    margin: 0.3em 0 0.5em;
   }
   .date {
     font-size: 16pt;
@@ -45,20 +49,20 @@
   .time-location {
     font-size: 16pt;
     font-weight: bold;
-    margin-bottom: 0.4em;
+    margin-bottom: 0.1em;
   }
   .thesis-intro {
     font-size: 18pt;
-    margin-top: 0.5em;
+    margin-top: 1em;
   }
   .thesis-title {
     font-size: 22pt;
     font-weight: bold;
-    margin: 0.3em 1em;
+    margin: 0.5em 1em;
   }
   .committee-intro {
     font-size: 18pt;
-    margin-top: 0.8em;
+    margin-top: 1em;
   }
   .committee {
     font-size: 20pt;
@@ -72,33 +76,35 @@
 </style>
 </head>
 <body>
-  <div class="announcement">Announcement</div>
+  <div class="border-box">
+    <div class="announcement">Announcement</div>
 
-  <div class="fpo-title">
-    <span class="a-letter">A</span>
-    <span class="initial">F</span>inal
-    <span class="initial">P</span>ublic
-    <span class="initial">O</span>ral Examination
+    <div class="fpo-title">
+      <span class="a-letter">A</span>
+      <span class="initial">F</span>inal
+      <span class="initial">P</span>ublic
+      <span class="initial">O</span>ral Examination
+    </div>
+
+    <div class="scheduled">is scheduled</div>
+    <div class="scheduled">for</div>
+
+    <div class="candidate">{{ event.candidate_name }}</div>
+
+    <div class="date">{{ event.formatted_date }}</div>
+    <div class="time-location">{{ event.formatted_time_location }}</div>
+
+    <div class="thesis-intro">Their Ph.D. dissertation is titled:</div>
+    <div class="thesis-title">&ldquo;{{ event.dissertation_title }}&rdquo;</div>
+
+    <div class="committee-intro">the examining committee members are:</div>
+    <div class="committee">
+      {% for line in event.committee_text.split('\n') %}
+        {{ line }}{% if not loop.last %}<br>{% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="encouragement">This presentation is open and you are encouraged to attend</div>
   </div>
-
-  <div class="scheduled">is scheduled</div>
-  <div class="scheduled">for</div>
-
-  <div class="candidate">{{ event.candidate_name }}</div>
-
-  <div class="date">{{ event.formatted_date }}</div>
-  <div class="time-location">{{ event.formatted_time_location }}</div>
-
-  <div class="thesis-intro">Their Ph.D. dissertation is titled:</div>
-  <div class="thesis-title">&ldquo;{{ event.dissertation_title }}&rdquo;</div>
-
-  <div class="committee-intro">the examining committee members are:</div>
-  <div class="committee">
-    {% for line in event.committee_text.split('\n') %}
-      {{ line }}{% if not loop.last %}<br>{% endif %}
-    {% endfor %}
-  </div>
-
-  <div class="encouragement">This presentation is open and you are encouraged to attend</div>
 </body>
 </html>

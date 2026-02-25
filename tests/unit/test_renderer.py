@@ -41,7 +41,7 @@ class TestRenderHtml:
 
     def test_contains_time_location(self):
         html = render_html(_sample_event())
-        assert "1 pm in Sherrerd Hall, Room 125" in html
+        assert "1:00 pm in Sherrerd Hall, Room 125" in html
 
     def test_contains_dissertation_title(self):
         html = render_html(_sample_event())

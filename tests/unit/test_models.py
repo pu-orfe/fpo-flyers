@@ -41,7 +41,7 @@ class TestFPOEvent:
 
     def test_formatted_time(self):
         event = _make_event()
-        assert event.formatted_time == "1 pm"
+        assert event.formatted_time == "1:00 pm"
 
     def test_formatted_time_with_minutes(self):
         event = _make_event(
@@ -53,7 +53,7 @@ class TestFPOEvent:
         event = _make_event(
             start=datetime(2026, 3, 2, 15, 0, tzinfo=timezone.utc)
         )
-        assert event.formatted_time == "10 am"
+        assert event.formatted_time == "10:00 am"
 
     def test_formatted_location(self):
         event = _make_event()
@@ -65,7 +65,7 @@ class TestFPOEvent:
 
     def test_formatted_time_location(self):
         event = _make_event()
-        assert event.formatted_time_location == "1 pm in Sherrerd Hall, Room 125"
+        assert event.formatted_time_location == "1:00 pm in Sherrerd Hall, Room 125"
 
     def test_committee_text_full(self):
         event = _make_event(
