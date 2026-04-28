@@ -4,86 +4,96 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FPO Flyers — Princeton ORFE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>FPO Flyers</h1>
-    <p>Final Public Oral Examination announcements — Princeton ORFE</p>
-  </header>
-  <main>
-    <div id="flyers">
-      <p class="loading">Loading flyers&hellip;</p>
+  <div class="pu-header-bar"></div>
+  <div class="container">
+    <header>
+      <h1 class="page-title">FPO Flyers</h1>
+      <p>Final Public Oral Examination announcements</p>
+    </header>
+    <main>
+      <div id="flyers">
+        <p class="loading">Loading flyers&hellip;</p>
+      </div>
+    </main>
+  </div>
+  <footer class="pu-footer">
+    <div class="container">
+      <a href="https://orfe.princeton.edu" target="_blank">Operations Research &amp; Financial Engineering</a>
+      <span>Princeton University</span>
     </div>
-  </main>
-  <footer>
-    <p>Automatically generated from the
-      <a href="https://orfe.princeton.edu/feeds/events/ical.ics?tid=491">ORFE ICS feed</a>.
-    </p>
   </footer>
   <script>
+    var bgColors = [
+      {name: 'gold',  rgb: 'rgb(201,140,32)'},
+      {name: 'olive', rgb: 'rgb(197,184,98)'},
+      {name: 'tan',   rgb: 'rgb(227,208,162)'},
+      {name: 'sage',  rgb: 'rgb(142,171,136)'},
+      {name: 'teal',  rgb: 'rgb(127,155,163)'},
+      {name: 'plum',  rgb: 'rgb(141,120,153)'},
+      {name: 'rose',  rgb: 'rgb(182,134,131)'}
+    ];
     fetch('manifest.json')
-      .then(r => r.json())
-      .then(files => {
-        const container = document.getElementById('flyers');
+      .then(function(r) { return r.json(); })
+      .then(function(files) {
+        var container = document.getElementById('flyers');
         container.innerHTML = '';
         if (files.length === 0) {
           container.innerHTML = '<p>No flyers currently available.</p>';
           return;
         }
-        var bgColors = [
-          {name: 'gold',  rgb: 'rgb(201,140,32)'},
-          {name: 'olive', rgb: 'rgb(197,184,98)'},
-          {name: 'tan',   rgb: 'rgb(227,208,162)'},
-          {name: 'sage',  rgb: 'rgb(142,171,136)'},
-          {name: 'teal',  rgb: 'rgb(127,155,163)'},
-          {name: 'plum',  rgb: 'rgb(141,120,153)'},
-          {name: 'rose',  rgb: 'rgb(182,134,131)'}
-        ];
-        const ul = document.createElement('ul');
-        files.forEach(f => {
-          const li = document.createElement('li');
-          const base = f.replace('.pdf', '');
-          const div = document.createElement('div');
-          div.className = 'flyer-links';
+        var ul = document.createElement('ul');
+        ul.className = 'flyer-list';
+        files.forEach(function(f) {
+          var base = f.replace('.pdf', '');
+          var li = document.createElement('li');
+          li.className = 'flyer-item';
 
-          const nameSpan = document.createElement('span');
-          nameSpan.className = 'flyer-name';
-          nameSpan.textContent = base.replace(/_/g, ' ') + ' \u2014';
-          div.appendChild(nameSpan);
+          var nameDiv = document.createElement('div');
+          nameDiv.className = 'flyer-name';
+          nameDiv.textContent = base.replace(/_/g, ' ');
+          li.appendChild(nameDiv);
 
-          const viewLink = document.createElement('a');
+          var linksDiv = document.createElement('div');
+          linksDiv.className = 'flyer-links';
+
+          var viewLink = document.createElement('a');
           viewLink.href = base + '.html';
           viewLink.textContent = 'View';
-          div.appendChild(viewLink);
+          linksDiv.appendChild(viewLink);
 
-          const dots = document.createElement('span');
+          var dots = document.createElement('span');
           dots.className = 'color-dots';
-          bgColors.forEach(c => {
-            const dot = document.createElement('a');
+          bgColors.forEach(function(c) {
+            var dot = document.createElement('a');
             dot.href = base + '.html?bg=' + c.name;
             dot.style.background = c.rgb;
             dot.title = c.name.charAt(0).toUpperCase() + c.name.slice(1);
             dots.appendChild(dot);
           });
-          div.appendChild(dots);
+          linksDiv.appendChild(dots);
 
-          const sep = document.createElement('span');
+          var sep = document.createElement('span');
           sep.className = 'sep';
           sep.textContent = '|';
-          div.appendChild(sep);
+          linksDiv.appendChild(sep);
 
-          const pdfLink = document.createElement('a');
+          var pdfLink = document.createElement('a');
           pdfLink.href = f;
           pdfLink.textContent = 'PDF';
-          div.appendChild(pdfLink);
+          linksDiv.appendChild(pdfLink);
 
-          li.appendChild(div);
+          li.appendChild(linksDiv);
           ul.appendChild(li);
         });
         container.appendChild(ul);
       })
-      .catch(() => {
+      .catch(function() {
         document.getElementById('flyers').innerHTML =
           '<p>No flyers currently available.</p>';
       });

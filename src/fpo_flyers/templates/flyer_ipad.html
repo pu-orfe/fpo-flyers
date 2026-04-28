@@ -84,56 +84,17 @@
     font-size: clamp(14px, 2.4vw, 16px);
     margin-top: 1.5em;
   }
-  .footer-bar {
+  .pdf-link {
     margin-top: 2em;
     font-size: clamp(12px, 2vw, 14px);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1em;
-    flex-wrap: wrap;
   }
-  .footer-bar a {
+  .pdf-link a {
     color: #1565c0;
     text-decoration: none;
   }
-  .footer-bar a:hover {
+  .pdf-link a:hover {
     text-decoration: underline;
-  }
-  .color-picker {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .color-picker span {
-    font-size: clamp(11px, 1.8vw, 13px);
-    color: #555;
-  }
-  .color-dot {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    border: 1.5px solid #ccc;
-    cursor: pointer;
-    transition: border-color 0.15s;
-  }
-  .color-dot:hover, .color-dot.active {
-    border-color: #333;
-  }
-  .color-dot[data-bg="none"] {
-    background: #fff;
-    position: relative;
-  }
-  .color-dot[data-bg="none"]::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 1px;
-    right: 1px;
-    height: 1.5px;
-    background: #ccc;
-    transform: rotate(-45deg);
   }
 </style>
 </head>
@@ -168,20 +129,7 @@
 
     <div class="encouragement">This presentation is open and you are encouraged to attend</div>
 
-    <div class="footer-bar">
-      <a href="{{ event.safe_filename }}.pdf">Download PDF</a>
-      <div class="color-picker">
-        <span>Background:</span>
-        <div class="color-dot" data-bg="none" title="None"></div>
-        <div class="color-dot" data-bg="gold" style="background:rgb(201,140,32)" title="Gold"></div>
-        <div class="color-dot" data-bg="olive" style="background:rgb(197,184,98)" title="Olive"></div>
-        <div class="color-dot" data-bg="tan" style="background:rgb(227,208,162)" title="Tan"></div>
-        <div class="color-dot" data-bg="sage" style="background:rgb(142,171,136)" title="Sage"></div>
-        <div class="color-dot" data-bg="teal" style="background:rgb(127,155,163)" title="Teal"></div>
-        <div class="color-dot" data-bg="plum" style="background:rgb(141,120,153)" title="Plum"></div>
-        <div class="color-dot" data-bg="rose" style="background:rgb(182,134,131)" title="Rose"></div>
-      </div>
-    </div>
+    <div class="pdf-link"><a href="{{ event.safe_filename }}.pdf">Download PDF version</a></div>
   </div>
   <script>
     var colors = {
@@ -193,27 +141,8 @@
       plum:  'rgba(141,120,153,0.07)',
       rose:  'rgba(182,134,131,0.07)'
     };
-    function applyBg(name) {
-      document.body.style.background = colors[name] || '#fff';
-      document.querySelectorAll('.color-dot').forEach(function(d) {
-        d.classList.toggle('active', d.getAttribute('data-bg') === name);
-      });
-      var url = new URL(window.location);
-      if (name && name !== 'none') {
-        url.searchParams.set('bg', name);
-      } else {
-        url.searchParams.delete('bg');
-      }
-      history.replaceState(null, '', url);
-    }
-    document.querySelectorAll('.color-dot').forEach(function(dot) {
-      dot.addEventListener('click', function() {
-        applyBg(this.getAttribute('data-bg'));
-      });
-    });
-    var initial = new URLSearchParams(window.location.search).get('bg');
-    if (initial && colors[initial]) { applyBg(initial); }
-    else { applyBg('none'); }
+    var bg = new URLSearchParams(window.location.search).get('bg');
+    if (bg && colors[bg]) { document.body.style.background = colors[bg]; }
   </script>
 </body>
 </html>
