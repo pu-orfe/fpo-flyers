@@ -12,76 +12,83 @@
   html, body {
     height: 100%;
     width: 100%;
+    overflow: hidden;
   }
   body {
     font-family: Georgia, "Times New Roman", serif;
     text-align: center;
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
-    padding: 3vh 4vw;
+    /* Approximate PDF letter page margins: 0.75in/11in top/bottom, 0.9in/8.5in sides */
+    padding: 6.8vh 10.6vw;
     background: #fff;
+    line-height: 1.4;
   }
   .border-box {
     border: 2.5px solid black;
-    padding: 5vh 5vw 4vh;
+    /* Approximate PDF border-box padding: 0.6in top, 0.4in sides, 0.5in bottom */
+    padding: 5.5vh 4.7vw 4.5vh;
     width: 100%;
-    max-width: 768px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
   .announcement {
-    font-size: clamp(32px, 7vw, 48px);
+    font-size: clamp(36px, 5.8vh, 52px);
     margin-bottom: 0.2em;
   }
   .fpo-title {
-    font-size: clamp(18px, 3.5vw, 24px);
+    font-size: clamp(20px, 2.9vh, 28px);
     margin-bottom: 0.1em;
   }
   .fpo-title .initial {
     font-weight: bold;
-    font-size: clamp(20px, 3.8vw, 26px);
+    font-size: clamp(22px, 3.2vh, 30px);
   }
   .fpo-title .a-letter {
-    font-size: clamp(22px, 4vw, 28px);
+    font-size: clamp(24px, 3.4vh, 32px);
   }
   .scheduled {
-    font-size: clamp(14px, 2.4vw, 16px);
+    font-size: clamp(14px, 2vh, 19px);
     margin-bottom: 0;
   }
   .candidate {
-    font-size: clamp(20px, 3.5vw, 24px);
+    font-size: clamp(22px, 2.9vh, 28px);
     font-weight: bold;
     margin: 0.3em 0 0.5em;
   }
   .date {
-    font-size: clamp(14px, 2.4vw, 16px);
+    font-size: clamp(14px, 2vh, 19px);
     font-weight: bold;
   }
   .time-location {
-    font-size: clamp(14px, 2.4vw, 16px);
+    font-size: clamp(14px, 2vh, 19px);
     font-weight: bold;
     margin-bottom: 0.1em;
   }
   .thesis-intro {
-    font-size: clamp(15px, 2.6vw, 18px);
+    font-size: clamp(15px, 2.2vh, 21px);
     margin-top: 1em;
   }
   .thesis-title {
-    font-size: clamp(17px, 3.2vw, 22px);
+    font-size: clamp(18px, 2.7vh, 26px);
     font-weight: bold;
     margin: 0.5em 1em;
     line-height: 1.4;
   }
   .committee-intro {
-    font-size: clamp(15px, 2.6vw, 18px);
+    font-size: clamp(15px, 2.2vh, 21px);
     margin-top: 1em;
   }
   .committee {
-    font-size: clamp(16px, 2.8vw, 20px);
+    font-size: clamp(16px, 2.4vh, 23px);
     margin-top: 0.3em;
     line-height: 1.5;
   }
   .encouragement {
-    font-size: clamp(14px, 2.4vw, 16px);
+    font-size: clamp(14px, 2vh, 19px);
     margin-top: 1.5em;
   }
 
@@ -120,13 +127,13 @@
   </div>
   <script>
     var colors = {
-      gold:  'rgba(201,140,32,0.07)',
-      olive: 'rgba(197,184,98,0.07)',
-      tan:   'rgba(227,208,162,0.07)',
-      sage:  'rgba(142,171,136,0.07)',
-      teal:  'rgba(127,155,163,0.07)',
-      plum:  'rgba(141,120,153,0.07)',
-      rose:  'rgba(182,134,131,0.07)'
+      gold:  'rgba(201,140,32,0.21)',
+      olive: 'rgba(197,184,98,0.21)',
+      tan:   'rgba(227,208,162,0.21)',
+      sage:  'rgba(142,171,136,0.21)',
+      teal:  'rgba(127,155,163,0.21)',
+      plum:  'rgba(141,120,153,0.21)',
+      rose:  'rgba(182,134,131,0.21)'
     };
     var bg = new URLSearchParams(window.location.search).get('bg');
     if (bg && colors[bg]) { document.body.style.background = colors[bg]; }

@@ -94,8 +94,8 @@ class TestRenderIpadHtml:
 
     def test_contains_bg_color_script(self):
         html = render_ipad_html(_sample_event())
-        assert "rgba(201,140,32,0.07)" in html
-        assert "rgba(182,134,131,0.07)" in html
+        assert "rgba(201,140,32,0.21)" in html
+        assert "rgba(182,134,131,0.21)" in html
         assert "URLSearchParams" in html
 
     def test_no_color_picker_ui(self):

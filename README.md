@@ -56,7 +56,7 @@ fpo-flyers --output-dir output --force --verbose \
 
 ## HTML Flyer Background Colors
 
-The HTML (iPad) version of each flyer supports an optional background color, selectable via the color dots on the index page or by appending `?bg=<name>` to the flyer URL. All colors are rendered at 7% opacity to keep text legible.
+The HTML (iPad) version of each flyer supports an optional background color, selectable via the color dots on the index page or by appending `?bg=<name>` to the flyer URL. All colors are rendered at 21% opacity.
 
 | # | Name  | RGB                  |
 |---|-------|----------------------|
