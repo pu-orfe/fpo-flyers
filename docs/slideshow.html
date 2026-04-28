@@ -13,39 +13,111 @@
       border: none;
       display: block;
     }
+    .controls {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6rem 1.2rem;
+      pointer-events: none;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+    .controls > * {
+      pointer-events: auto;
+    }
+    .counter {
+      font-size: 14px;
+      color: #555;
+      letter-spacing: 0.02em;
+      user-select: none;
+    }
+    .nav-buttons {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .nav-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 18px;
+      color: #555;
+      padding: 0.15rem 0.3rem;
+      line-height: 1;
+      transition: color 0.2s ease;
+      user-select: none;
+    }
+    .nav-btn:hover {
+      color: #121212;
+    }
   </style>
 </head>
 <body>
   <iframe id="viewer"></iframe>
+  <div class="controls" id="controls" style="display:none">
+    <span class="counter" id="counter"></span>
+    <div class="nav-buttons">
+      <button class="nav-btn" id="prevBtn" title="Previous">&lsaquo;</button>
+      <button class="nav-btn" id="pauseBtn" title="Pause">&Vert;</button>
+      <button class="nav-btn" id="nextBtn" title="Next">&rsaquo;</button>
+    </div>
+  </div>
   <script>
     var colorNames = ['gold', 'olive', 'tan', 'sage', 'teal', 'plum', 'rose'];
     var INTERVAL = 15000;
     var files = [];
     var current = 0;
     var timer = null;
+    var playing = true;
     var viewer = document.getElementById('viewer');
+    var counter = document.getElementById('counter');
+    var controls = document.getElementById('controls');
+    var pauseBtn = document.getElementById('pauseBtn');
 
     function show(index) {
       if (files.length === 0) return;
-      current = index % files.length;
+      current = ((index % files.length) + files.length) % files.length;
       var base = files[current].replace('.pdf', '');
       var color = colorNames[current % colorNames.length];
       viewer.src = base + '.html?bg=' + color;
-    }
-
-    function advance() {
-      show(current + 1);
+      if (files.length > 1) {
+        counter.textContent = (current + 1) + '\u2009/\u2009' + files.length;
+      }
     }
 
     function start() {
       if (timer) return;
-      timer = setInterval(advance, INTERVAL);
+      timer = setInterval(function() { show(current + 1); }, INTERVAL);
+      playing = true;
+      pauseBtn.innerHTML = '&Vert;';
+      pauseBtn.title = 'Pause';
     }
 
     function stop() {
       clearInterval(timer);
       timer = null;
+      playing = false;
+      pauseBtn.innerHTML = '&#9655;';
+      pauseBtn.title = 'Play';
     }
+
+    document.getElementById('prevBtn').addEventListener('click', function() {
+      stop();
+      show(current - 1);
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', function() {
+      stop();
+      show(current + 1);
+    });
+
+    pauseBtn.addEventListener('click', function() {
+      if (playing) { stop(); } else { start(); }
+    });
 
     fetch('manifest.json')
       .then(function(r) { return r.json(); })
@@ -54,6 +126,9 @@
         if (files.length === 0) {
           document.body.innerHTML = '<p style="padding:2rem;font-family:sans-serif">No flyers available.</p>';
           return;
+        }
+        if (files.length > 1) {
+          controls.style.display = '';
         }
         show(0);
         start();
