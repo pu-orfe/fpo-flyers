@@ -34,10 +34,19 @@
         const ul = document.createElement('ul');
         files.forEach(f => {
           const li = document.createElement('li');
-          const a = document.createElement('a');
-          a.href = f;
-          a.textContent = f.replace('.pdf', '').replace(/_/g, ' ');
-          li.appendChild(a);
+          const name = f.replace('.pdf', '');
+          const label = document.createTextNode(name.replace(/_/g, ' ') + ' \u2014 ');
+          const htmlLink = document.createElement('a');
+          htmlLink.href = name + '.html';
+          htmlLink.textContent = 'View';
+          const sep = document.createTextNode(' | ');
+          const pdfLink = document.createElement('a');
+          pdfLink.href = f;
+          pdfLink.textContent = 'PDF';
+          li.appendChild(label);
+          li.appendChild(htmlLink);
+          li.appendChild(sep);
+          li.appendChild(pdfLink);
           ul.appendChild(li);
         });
         container.appendChild(ul);

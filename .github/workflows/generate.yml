@@ -96,15 +96,15 @@ jobs:
             set -- "$@" --bypass-header "$BYPASS_HEADER"
           fi
           fpo-flyers "$@"
-          # Check if any PDFs were generated
+          # Check if any flyers were generated
           if ls output/*.pdf 1>/dev/null 2>&1; then
-            echo "has_pdfs=true" >> "$GITHUB_OUTPUT"
+            echo "has_flyers=true" >> "$GITHUB_OUTPUT"
           else
-            echo "has_pdfs=false" >> "$GITHUB_OUTPUT"
+            echo "has_flyers=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Commit hash file
-        if: steps.generate.outputs.has_pdfs == 'true'
+        if: steps.generate.outputs.has_flyers == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -113,12 +113,13 @@ jobs:
           git push
 
       - name: Build site
-        if: steps.generate.outputs.has_pdfs == 'true'
+        if: steps.generate.outputs.has_flyers == 'true'
         run: |
           mkdir -p _site
           cp docs/index.html _site/
           cp docs/style.css _site/
           cp output/*.pdf _site/
+          cp output/*.html _site/
           # Generate a JSON manifest of PDFs for the index page
           cd _site
           echo "[" > manifest.json
@@ -131,9 +132,9 @@ jobs:
           echo "]" >> manifest.json
 
       - name: Upload Pages artifact
-        if: steps.generate.outputs.has_pdfs == 'true'
+        if: steps.generate.outputs.has_flyers == 'true'
         uses: actions/upload-pages-artifact@v3
 
       - name: Deploy to GitHub Pages
-        if: steps.generate.outputs.has_pdfs == 'true'
+        if: steps.generate.outputs.has_flyers == 'true'
         uses: actions/deploy-pages@v4

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  html, body {
+    height: 100%;
+    width: 100%;
+  }
+  body {
+    font-family: Georgia, "Times New Roman", serif;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3vh 4vw;
+    background: #fff;
+  }
+  .border-box {
+    border: 2.5px solid black;
+    padding: 5vh 5vw 4vh;
+    width: 100%;
+    max-width: 768px;
+  }
+  .announcement {
+    font-size: clamp(32px, 7vw, 48px);
+    margin-bottom: 0.2em;
+  }
+  .fpo-title {
+    font-size: clamp(18px, 3.5vw, 24px);
+    margin-bottom: 0.1em;
+  }
+  .fpo-title .initial {
+    font-weight: bold;
+    font-size: clamp(20px, 3.8vw, 26px);
+  }
+  .fpo-title .a-letter {
+    font-size: clamp(22px, 4vw, 28px);
+  }
+  .scheduled {
+    font-size: clamp(14px, 2.4vw, 16px);
+    margin-bottom: 0;
+  }
+  .candidate {
+    font-size: clamp(20px, 3.5vw, 24px);
+    font-weight: bold;
+    margin: 0.3em 0 0.5em;
+  }
+  .date {
+    font-size: clamp(14px, 2.4vw, 16px);
+    font-weight: bold;
+  }
+  .time-location {
+    font-size: clamp(14px, 2.4vw, 16px);
+    font-weight: bold;
+    margin-bottom: 0.1em;
+  }
+  .thesis-intro {
+    font-size: clamp(15px, 2.6vw, 18px);
+    margin-top: 1em;
+  }
+  .thesis-title {
+    font-size: clamp(17px, 3.2vw, 22px);
+    font-weight: bold;
+    margin: 0.5em 1em;
+    line-height: 1.4;
+  }
+  .committee-intro {
+    font-size: clamp(15px, 2.6vw, 18px);
+    margin-top: 1em;
+  }
+  .committee {
+    font-size: clamp(16px, 2.8vw, 20px);
+    margin-top: 0.3em;
+    line-height: 1.5;
+  }
+  .encouragement {
+    font-size: clamp(14px, 2.4vw, 16px);
+    margin-top: 1.5em;
+  }
+  .pdf-link {
+    margin-top: 2em;
+    font-size: clamp(12px, 2vw, 14px);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .pdf-link a {
+    color: #1565c0;
+    text-decoration: none;
+  }
+  .pdf-link a:hover {
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+  <div class="border-box">
+    <div class="announcement">Announcement</div>
+
+    <div class="fpo-title">
+      <span class="a-letter">A</span>
+      <span class="initial">F</span>inal
+      <span class="initial">P</span>ublic
+      <span class="initial">O</span>ral Examination
+    </div>
+
+    <div class="scheduled">is scheduled</div>
+    <div class="scheduled">for</div>
+
+    <div class="candidate">{{ event.candidate_name }}</div>
+
+    <div class="date">{{ event.formatted_date }}</div>
+    <div class="time-location">{{ event.formatted_time_location }}</div>
+
+    <div class="thesis-intro">Their Ph.D. dissertation is titled:</div>
+    <div class="thesis-title">&ldquo;{{ event.dissertation_title }}&rdquo;</div>
+
+    <div class="committee-intro">the examining committee members are:</div>
+    <div class="committee">
+      {% for line in event.committee_text.split('\n') %}
+        {{ line }}{% if not loop.last %}<br>{% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="encouragement">This presentation is open and you are encouraged to attend</div>
+
+    <div class="pdf-link"><a href="{{ event.safe_filename }}.pdf">Download PDF version</a></div>
+  </div>
+</body>
+</html>

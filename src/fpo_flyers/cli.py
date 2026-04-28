@@ -10,7 +10,7 @@ import click
 
 from .change_detection import has_changed, write_hash
 from .feed import FEED_URL, compute_feed_hash, fetch_feed, parse_events
-from .renderer import render_pdf
+from .renderer import render_html_flyer, render_pdf
 from .scraper import scrape_event_page
 
 logger = logging.getLogger("fpo_flyers")
@@ -93,7 +93,8 @@ def main(
                 )
 
         pdf_path = render_pdf(event, output_dir)
-        logger.info("  Generated: %s", pdf_path)
+        html_path = render_html_flyer(event, output_dir)
+        logger.info("  Generated: %s, %s", pdf_path, html_path)
 
     write_hash(hash_file, current_hash)
     logger.info("Hash updated: %s", current_hash[:12])

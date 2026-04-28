@@ -8,7 +8,7 @@ import responses
 
 from fpo_flyers.change_detection import read_stored_hash
 from fpo_flyers.feed import FEED_URL, compute_feed_hash, fetch_feed, parse_events
-from fpo_flyers.renderer import render_pdf
+from fpo_flyers.renderer import render_html_flyer, render_pdf
 from fpo_flyers.scraper import scrape_event_page
 
 
@@ -43,13 +43,18 @@ def test_full_pipeline(sample_feed_ics, sample_event_html, tmp_path):
         event.dissertation_title = info["dissertation_title"]
         event.dissertation_pdf_url = info["dissertation_pdf_url"]
 
-    # Render PDFs
+    # Render PDFs and HTML flyers
     output_dir = tmp_path / "output"
     for event in events:
         pdf_path = render_pdf(event, output_dir)
         assert pdf_path.exists()
         assert pdf_path.suffix == ".pdf"
         assert pdf_path.stat().st_size > 0
+
+        html_path = render_html_flyer(event, output_dir)
+        assert html_path.exists()
+        assert html_path.suffix == ".html"
+        assert html_path.stem == pdf_path.stem
 
     # Verify hash
     feed_hash = compute_feed_hash(ics_text)

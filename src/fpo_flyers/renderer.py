@@ -13,12 +13,22 @@ TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 
 
 def render_html(event: FPOEvent, templates_dir: Path = TEMPLATES_DIR) -> str:
-    """Render a flyer to HTML string."""
+    """Render a flyer to HTML string (print layout for PDF conversion)."""
     env = Environment(
         loader=FileSystemLoader(str(templates_dir)),
         autoescape=False,
     )
     template = env.get_template("flyer.html")
+    return template.render(event=event)
+
+
+def render_ipad_html(event: FPOEvent, templates_dir: Path = TEMPLATES_DIR) -> str:
+    """Render a flyer to HTML string (iPad portrait layout)."""
+    env = Environment(
+        loader=FileSystemLoader(str(templates_dir)),
+        autoescape=False,
+    )
+    template = env.get_template("flyer_ipad.html")
     return template.render(event=event)
 
 
@@ -33,3 +43,16 @@ def render_pdf(
     pdf_path = output_dir / f"{event.safe_filename}.pdf"
     HTML(string=html_str).write_pdf(str(pdf_path))
     return pdf_path
+
+
+def render_html_flyer(
+    event: FPOEvent,
+    output_dir: Path,
+    templates_dir: Path = TEMPLATES_DIR,
+) -> Path:
+    """Render a flyer to a standalone HTML file (iPad portrait layout)."""
+    html_str = render_ipad_html(event, templates_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    html_path = output_dir / f"{event.safe_filename}.html"
+    html_path.write_text(html_str, encoding="utf-8")
+    return html_path
