@@ -92,6 +92,26 @@ class TestRenderIpadHtml:
         html = render_ipad_html(_sample_event())
         assert "clamp(" in html
 
+    def test_contains_color_picker(self):
+        html = render_ipad_html(_sample_event())
+        assert "color-dot" in html
+        assert "color-picker" in html
+
+    def test_contains_all_color_options(self):
+        html = render_ipad_html(_sample_event())
+        for name in ("gold", "olive", "tan", "sage", "teal", "plum", "rose"):
+            assert f'data-bg="{name}"' in html
+
+    def test_contains_color_rgba_values(self):
+        html = render_ipad_html(_sample_event())
+        assert "rgba(201,140,32,0.07)" in html
+        assert "rgba(182,134,131,0.07)" in html
+
+    def test_contains_bg_query_param_script(self):
+        html = render_ipad_html(_sample_event())
+        assert "searchParams" in html
+        assert "'bg'" in html
+
 
 class TestRenderHtmlFlyer:
     def test_writes_html_file(self, tmp_path):

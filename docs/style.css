@@ -64,3 +64,39 @@ footer {
 footer a {
   color: #888;
 }
+
+.flyer-links {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.flyer-name {
+  margin-right: 0.25rem;
+}
+
+.color-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.color-dots a {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid #ccc;
+  font-size: 0;
+  transition: border-color 0.15s;
+}
+
+.color-dots a:hover {
+  border-color: #333;
+  text-decoration: none;
+}
+
+.sep {
+  color: #ccc;
+}

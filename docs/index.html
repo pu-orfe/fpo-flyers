@@ -31,22 +31,54 @@
           container.innerHTML = '<p>No flyers currently available.</p>';
           return;
         }
+        var bgColors = [
+          {name: 'gold',  rgb: 'rgb(201,140,32)'},
+          {name: 'olive', rgb: 'rgb(197,184,98)'},
+          {name: 'tan',   rgb: 'rgb(227,208,162)'},
+          {name: 'sage',  rgb: 'rgb(142,171,136)'},
+          {name: 'teal',  rgb: 'rgb(127,155,163)'},
+          {name: 'plum',  rgb: 'rgb(141,120,153)'},
+          {name: 'rose',  rgb: 'rgb(182,134,131)'}
+        ];
         const ul = document.createElement('ul');
         files.forEach(f => {
           const li = document.createElement('li');
-          const name = f.replace('.pdf', '');
-          const label = document.createTextNode(name.replace(/_/g, ' ') + ' \u2014 ');
-          const htmlLink = document.createElement('a');
-          htmlLink.href = name + '.html';
-          htmlLink.textContent = 'View';
-          const sep = document.createTextNode(' | ');
+          const base = f.replace('.pdf', '');
+          const div = document.createElement('div');
+          div.className = 'flyer-links';
+
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'flyer-name';
+          nameSpan.textContent = base.replace(/_/g, ' ') + ' \u2014';
+          div.appendChild(nameSpan);
+
+          const viewLink = document.createElement('a');
+          viewLink.href = base + '.html';
+          viewLink.textContent = 'View';
+          div.appendChild(viewLink);
+
+          const dots = document.createElement('span');
+          dots.className = 'color-dots';
+          bgColors.forEach(c => {
+            const dot = document.createElement('a');
+            dot.href = base + '.html?bg=' + c.name;
+            dot.style.background = c.rgb;
+            dot.title = c.name.charAt(0).toUpperCase() + c.name.slice(1);
+            dots.appendChild(dot);
+          });
+          div.appendChild(dots);
+
+          const sep = document.createElement('span');
+          sep.className = 'sep';
+          sep.textContent = '|';
+          div.appendChild(sep);
+
           const pdfLink = document.createElement('a');
           pdfLink.href = f;
           pdfLink.textContent = 'PDF';
-          li.appendChild(label);
-          li.appendChild(htmlLink);
-          li.appendChild(sep);
-          li.appendChild(pdfLink);
+          div.appendChild(pdfLink);
+
+          li.appendChild(div);
           ul.appendChild(li);
         });
         container.appendChild(ul);

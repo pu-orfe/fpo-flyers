@@ -54,6 +54,20 @@ fpo-flyers --output-dir output --force --verbose \
   --bypass-header "Header-Name: header-value"
 ```
 
+## HTML Flyer Background Colors
+
+The HTML (iPad) version of each flyer supports an optional background color, selectable via the color dots on the index page or by appending `?bg=<name>` to the flyer URL. All colors are rendered at 7% opacity to keep text legible.
+
+| # | Name  | RGB                  |
+|---|-------|----------------------|
+| 1 | Gold  | `rgb(201,140,32)`    |
+| 2 | Olive | `rgb(197,184,98)`    |
+| 3 | Tan   | `rgb(227,208,162)`   |
+| 4 | Sage  | `rgb(142,171,136)`   |
+| 5 | Teal  | `rgb(127,155,163)`   |
+| 6 | Plum  | `rgb(141,120,153)`   |
+| 7 | Rose  | `rgb(182,134,131)`   |
+
 ## CI/CD
 
 The GitHub Actions workflow runs every 30 minutes and can be triggered manually. When the feed changes, it generates PDFs and deploys them to GitHub Pages.
