@@ -146,6 +146,31 @@ header p {
   font-style: italic;
 }
 
+/* View All button */
+#view-all-container {
+  margin-top: 1.5rem;
+}
+
+.btn-view-all {
+  display: inline-block;
+  background-color: var(--pu-dark);
+  color: var(--pu-white) !important;
+  border: 2px solid var(--pu-dark);
+  padding: 0.45rem 1.2rem;
+  text-transform: uppercase;
+  font-family: var(--pu-font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.btn-view-all:hover {
+  background-color: var(--pu-orange);
+  border-color: var(--pu-orange);
+  color: var(--pu-black) !important;
+}
+
 /* Footer */
 .pu-footer {
   background: var(--pu-dark);

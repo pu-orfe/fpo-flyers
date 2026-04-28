@@ -20,6 +20,9 @@
       <div id="flyers">
         <p class="loading">Loading flyers&hellip;</p>
       </div>
+      <div id="view-all-container" style="display:none">
+        <a href="slideshow.html" class="btn-view-all">View All</a>
+      </div>
     </main>
   </div>
   <footer class="pu-footer">
@@ -92,6 +95,7 @@
           ul.appendChild(li);
         });
         container.appendChild(ul);
+        document.getElementById('view-all-container').style.display = '';
       })
       .catch(function() {
         document.getElementById('flyers').innerHTML =

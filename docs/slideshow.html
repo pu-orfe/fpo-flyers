@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FPO Flyers — Slideshow</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; width: 100%; overflow: hidden; background: #fff; }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <iframe id="viewer"></iframe>
+  <script>
+    var colorNames = ['gold', 'olive', 'tan', 'sage', 'teal', 'plum', 'rose'];
+    var INTERVAL = 15000;
+    var files = [];
+    var current = 0;
+    var timer = null;
+    var viewer = document.getElementById('viewer');
+
+    function show(index) {
+      if (files.length === 0) return;
+      current = index % files.length;
+      var base = files[current].replace('.pdf', '');
+      var color = colorNames[current % colorNames.length];
+      viewer.src = base + '.html?bg=' + color;
+    }
+
+    function advance() {
+      show(current + 1);
+    }
+
+    function start() {
+      if (timer) return;
+      timer = setInterval(advance, INTERVAL);
+    }
+
+    function stop() {
+      clearInterval(timer);
+      timer = null;
+    }
+
+    fetch('manifest.json')
+      .then(function(r) { return r.json(); })
+      .then(function(f) {
+        files = f;
+        if (files.length === 0) {
+          document.body.innerHTML = '<p style="padding:2rem;font-family:sans-serif">No flyers available.</p>';
+          return;
+        }
+        show(0);
+        start();
+      });
+  </script>
+</body>
+</html>

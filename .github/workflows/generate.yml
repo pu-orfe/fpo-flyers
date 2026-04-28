@@ -118,6 +118,7 @@ jobs:
           mkdir -p _site
           cp docs/index.html _site/
           cp docs/style.css _site/
+          cp docs/slideshow.html _site/
           cp output/*.pdf _site/
           cp output/*.html _site/
           # Generate a JSON manifest of PDFs for the index page
