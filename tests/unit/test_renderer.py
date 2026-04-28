@@ -84,9 +84,9 @@ class TestRenderIpadHtml:
         html = render_ipad_html(_sample_event())
         assert "Jianqing Fan, (Chair)" in html
 
-    def test_contains_pdf_link(self):
+    def test_no_pdf_link(self):
         html = render_ipad_html(_sample_event())
-        assert "Shange_Tang.pdf" in html
+        assert "Download PDF" not in html
 
     def test_uses_clamp_sizing(self):
         html = render_ipad_html(_sample_event())
