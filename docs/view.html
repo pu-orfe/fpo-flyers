@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FPO Flyer</title>
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  html, body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+  body {
+    font-family: Georgia, "Times New Roman", serif;
+    text-align: center;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    padding: 6.8vh 10.6vw;
+    background: #fff;
+    line-height: 1.4;
+  }
+  .border-box {
+    border: 2.5px solid black;
+    padding: 5.5vh 4.7vw 4.5vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .announcement {
+    font-size: clamp(36px, 5.8vh, 52px);
+    margin-bottom: 0.2em;
+  }
+  .fpo-title {
+    font-size: clamp(20px, 2.9vh, 28px);
+    margin-bottom: 0.1em;
+  }
+  .fpo-title .initial {
+    font-weight: bold;
+    font-size: clamp(22px, 3.2vh, 30px);
+  }
+  .fpo-title .a-letter {
+    font-size: clamp(24px, 3.4vh, 32px);
+  }
+  .scheduled {
+    font-size: clamp(14px, 2vh, 19px);
+    margin-bottom: 0;
+  }
+  .candidate {
+    font-size: clamp(22px, 2.9vh, 28px);
+    font-weight: bold;
+    margin: 0.3em 0 0.5em;
+  }
+  .date {
+    font-size: clamp(14px, 2vh, 19px);
+    font-weight: bold;
+  }
+  .time-location {
+    font-size: clamp(14px, 2vh, 19px);
+    font-weight: bold;
+    margin-bottom: 0.1em;
+  }
+  .thesis-intro {
+    font-size: clamp(15px, 2.2vh, 21px);
+    margin-top: 1em;
+  }
+  .thesis-title {
+    font-size: clamp(18px, 2.7vh, 26px);
+    font-weight: bold;
+    margin: 0.5em 1em;
+    line-height: 1.4;
+  }
+  .committee-intro {
+    font-size: clamp(15px, 2.2vh, 21px);
+    margin-top: 1em;
+  }
+  .committee {
+    font-size: clamp(16px, 2.4vh, 23px);
+    margin-top: 0.3em;
+    line-height: 1.5;
+  }
+  .encouragement {
+    font-size: clamp(14px, 2vh, 19px);
+    margin-top: 1.5em;
+  }
+
+</style>
+</head>
+<body>
+  <div class="border-box">
+    <div class="announcement">Announcement</div>
+
+    <div class="fpo-title">
+      <span class="a-letter">A</span>
+      <span class="initial">F</span>inal
+      <span class="initial">P</span>ublic
+      <span class="initial">O</span>ral Examination
+    </div>
+
+    <div class="scheduled">is scheduled</div>
+    <div class="scheduled">for</div>
+
+    <div class="candidate" id="candidate"></div>
+
+    <div class="date" id="date"></div>
+    <div class="time-location" id="time-location"></div>
+
+    <div class="thesis-intro">Their Ph.D. dissertation is titled:</div>
+    <div class="thesis-title" id="thesis-title"></div>
+
+    <div class="committee-intro">the examining committee members are:</div>
+    <div class="committee" id="committee"></div>
+
+    <div class="encouragement">This presentation is open and you are encouraged to attend</div>
+  </div>
+  <script>
+    var colors = {
+      gold:  'rgba(201,140,32,0.42)',
+      olive: 'rgba(197,184,98,0.42)',
+      tan:   'rgba(227,208,162,0.42)',
+      sage:  'rgba(142,171,136,0.42)',
+      teal:  'rgba(127,155,163,0.42)',
+      plum:  'rgba(141,120,153,0.42)',
+      rose:  'rgba(182,134,131,0.42)'
+    };
+
+    var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    var MONTHS = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+
+    /* Sanitize text for safe insertion */
+    function esc(s) {
+      var d = document.createElement('div');
+      d.appendChild(document.createTextNode(s || ''));
+      return d.innerHTML;
+    }
+
+    /* Parse candidate name: accept "FPO, Name" or just "Name" */
+    function parseCandidate(raw) {
+      if (!raw) return '';
+      var m = raw.match(/^FPO\s*,\s*(.+)/i);
+      return m ? m[1].trim() : raw.trim();
+    }
+
+    /* Format date: "Monday, March 2, 2026" */
+    function formatDate(dt) {
+      return DAYS[dt.getDay()] + ', ' + MONTHS[dt.getMonth()] + ' ' +
+             dt.getDate() + ', ' + dt.getFullYear();
+    }
+
+    /* Format time: "1:00 pm" */
+    function formatTime(dt) {
+      var h = dt.getHours();
+      var m = dt.getMinutes();
+      var period = h < 12 ? 'am' : 'pm';
+      h = h % 12 || 12;
+      return h + ':' + (m < 10 ? '0' : '') + m + ' ' + period;
+    }
+
+    /* Reformat location: "125 - Sherrerd Hall" → "Sherrerd Hall, Room 125" */
+    function formatLocation(raw) {
+      if (!raw) return '';
+      var loc = raw.trim();
+      var idx = loc.indexOf(' - ');
+      if (idx !== -1) {
+        var room = loc.substring(0, idx);
+        var building = loc.substring(idx + 3);
+        return building + ', Room ' + room;
+      }
+      return loc;
+    }
+
+    /*
+     * Format committee text matching the Python model output.
+     * Input: comma-separated names, chair marked with "(Chair)" or
+     *        "(Chair of the Committee)" after their name.
+     * Output HTML: "Professors Name, (Chair)<br>Name2, and Name3"
+     */
+    function formatCommittee(raw) {
+      if (!raw) return '';
+      /* Normalize "and" to comma, split */
+      var text = raw.replace(/,?\s+and\s+/gi, ', ');
+      var parts = text.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+      var members = [];
+      for (var i = 0; i < parts.length; i++) {
+        var isChair = /\(Chair/i.test(parts[i]);
+        var name = parts[i].replace(/\s*\(Chair[^)]*\)/i, '').trim();
+        if (name) members.push({ name: name, isChair: isChair });
+      }
+      if (members.length === 0) return '';
+      /* Build formatted parts */
+      var formatted = [];
+      for (var j = 0; j < members.length; j++) {
+        var label = members[j].isChair ? members[j].name + ', (Chair)' : members[j].name;
+        var isLast = j === members.length - 1;
+        if (j === 0) {
+          var prefix = members.length > 1 ? 'Professors ' : 'Professor ';
+          formatted.push(prefix + label);
+        } else {
+          formatted.push((isLast ? 'and ' : '') + label);
+        }
+      }
+      /* Chair on first line, rest joined with commas on second */
+      var first = esc(formatted[0]);
+      var rest = formatted.slice(1);
+      if (rest.length > 0) {
+        return first + '<br>' + esc(rest.join(', '));
+      }
+      return first;
+    }
+
+    /* Parse a datetime string into a Date in Eastern time.
+     * Accepts ISO with or without timezone, or Unix timestamp (seconds). */
+    function parseDate(raw) {
+      if (!raw) return null;
+      /* Unix timestamp (all digits) */
+      if (/^\d{9,}$/.test(raw)) return new Date(parseInt(raw, 10) * 1000);
+      /* If no timezone indicator, treat as Eastern */
+      if (!/[Zz]|[+-]\d{2}/.test(raw)) {
+        /* Append Eastern offset — use the date itself to determine EST/EDT.
+         * Parse naively first, then rebuild with the correct offset. */
+        var naive = new Date(raw);
+        /* Determine if DST: create date in UTC, check Eastern offset */
+        var jan = new Date(naive.getFullYear(), 0, 1);
+        var jul = new Date(naive.getFullYear(), 6, 1);
+        var stdOffset = Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
+        /* For US Eastern: std = 300 (EST=-5), dst = 240 (EDT=-4) */
+        /* We assume the input is Eastern, so convert to UTC */
+        var testDate = new Date(raw + '-05:00');
+        var isDST = testDate.getTimezoneOffset !== undefined;
+        /* Simpler: check if the month is in DST range (Mar-Nov roughly) */
+        var month = naive.getMonth(); /* 0-indexed */
+        var offset = (month >= 2 && month <= 10) ? '-04:00' : '-05:00';
+        return new Date(raw + offset);
+      }
+      return new Date(raw);
+    }
+
+    /* ── Main ── */
+    var params = new URLSearchParams(window.location.search);
+
+    /* Background */
+    var bg = params.get('bg');
+    if (bg && colors[bg]) document.body.style.background = colors[bg];
+
+    /* Candidate */
+    var candidateName = parseCandidate(params.get('candidate'));
+    document.getElementById('candidate').textContent = candidateName;
+    if (candidateName) document.title = 'FPO — ' + candidateName;
+
+    /* Date & time */
+    var dateEl = document.getElementById('date');
+    var tlEl = document.getElementById('time-location');
+    var dt = parseDate(params.get('date'));
+    var loc = formatLocation(params.get('location'));
+    if (dt) {
+      /* Convert to Eastern for display */
+      var eastern = new Date(dt.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+      dateEl.textContent = formatDate(eastern);
+      tlEl.textContent = formatTime(eastern) + (loc ? ' in ' + loc : '');
+    } else {
+      tlEl.textContent = loc;
+    }
+
+    /* Dissertation title */
+    var title = params.get('title') || '';
+    document.getElementById('thesis-title').innerHTML =
+      '\u201c' + esc(title) + '\u201d';
+
+    /* Committee */
+    document.getElementById('committee').innerHTML =
+      formatCommittee(params.get('committee'));
+  </script>
+</body>
+</html>

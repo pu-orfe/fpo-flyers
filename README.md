@@ -68,6 +68,33 @@ The HTML (iPad) version of each flyer supports an optional background color, sel
 | 6 | Plum  | `rgb(141,120,153)`   |
 | 7 | Rose  | `rgb(182,134,131)`   |
 
+## Dynamic View Page
+
+The `view.html` page renders a flyer from URL query parameters, allowing external systems (e.g., Drupal) to link directly to a flyer without pre-generation.
+
+**URL**: `https://pu-orfe.github.io/fpo-flyers/view.html?candidate=...&title=...&date=...&location=...&committee=...&bg=...`
+
+| Parameter   | Required | Description |
+|-------------|----------|-------------|
+| `candidate` | Yes      | Candidate name. Accepts `"FPO, Name"` or just `"Name"`. |
+| `title`     | No       | Dissertation title. |
+| `date`      | No       | Start datetime — ISO 8601 (e.g., `2026-03-02T13:00:00`), treated as Eastern if no timezone, or Unix timestamp in seconds. |
+| `location`  | No       | Location string (e.g., `125 - Sherrerd Hall`); automatically reformatted to `Sherrerd Hall, Room 125`. |
+| `committee` | No       | Comma-separated names. Mark the chair with `(Chair)` or `(Chair of the Committee)` after their name. |
+| `bg`        | No       | Background color name from the color table above. |
+
+**Drupal webform integration** — In a computed Twig token, construct the URL:
+
+```twig
+{% set candidate = webform_token('[webform_submission:source-entity:title]', webform_submission)|trim %}
+{% set title = webform_token('[webform_submission:source-entity:field_subtitle]', webform_submission)|trim %}
+{% set date = webform_token('[webform_submission:source-entity:field_ps_events_date:value]', webform_submission)|trim %}
+{% set location = webform_token('[webform_submission:source-entity:field_ps_events_location_name]', webform_submission)|trim %}
+<a href="https://pu-orfe.github.io/fpo-flyers/view.html?candidate={{ candidate|url_encode }}&title={{ title|url_encode }}&date={{ date|url_encode }}&location={{ location|url_encode }}&bg=tan">
+  Print FPO Flyer
+</a>
+```
+
 ## CI/CD
 
 The GitHub Actions workflow runs every 30 minutes and can be triggered manually. When the feed changes, it generates PDFs and deploys them to GitHub Pages.
