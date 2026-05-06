@@ -91,6 +91,20 @@
     margin-top: 1.5em;
   }
 
+  @media print {
+    @page { size: letter; margin: 0; }
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: visible;
+    }
+    body {
+      padding: 0.75in 0.9in;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -134,6 +148,12 @@
     var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     var MONTHS = ['January','February','March','April','May','June',
                   'July','August','September','October','November','December'];
+
+    /* Strip &nbsp; (U+00A0) and collapse whitespace */
+    function clean(s) {
+      if (!s) return '';
+      return s.replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
+    }
 
     /* Sanitize text for safe insertion */
     function esc(s) {
@@ -251,15 +271,15 @@
     if (bg && colors[bg]) document.body.style.background = colors[bg];
 
     /* Candidate */
-    var candidateName = parseCandidate(params.get('candidate'));
+    var candidateName = parseCandidate(clean(params.get('candidate')));
     document.getElementById('candidate').textContent = candidateName;
     if (candidateName) document.title = 'FPO — ' + candidateName;
 
     /* Date & time */
     var dateEl = document.getElementById('date');
     var tlEl = document.getElementById('time-location');
-    var dt = parseDate(params.get('date'));
-    var loc = formatLocation(params.get('location'));
+    var dt = parseDate(clean(params.get('date')));
+    var loc = formatLocation(clean(params.get('location')));
     if (dt) {
       /* Convert to Eastern for display */
       var eastern = new Date(dt.toLocaleString('en-US', { timeZone: 'America/New_York' }));
@@ -270,13 +290,13 @@
     }
 
     /* Dissertation title */
-    var title = params.get('title') || '';
+    var title = clean(params.get('title')) || '';
     document.getElementById('thesis-title').innerHTML =
       '\u201c' + esc(title) + '\u201d';
 
     /* Committee */
     document.getElementById('committee').innerHTML =
-      formatCommittee(params.get('committee'));
+      formatCommittee(clean(params.get('committee')));
   </script>
 </body>
 </html>
