@@ -236,31 +236,23 @@
       return first;
     }
 
-    /* Parse a datetime string into a Date in Eastern time.
-     * Accepts ISO with or without timezone, or Unix timestamp (seconds). */
+    /* Parse a datetime string into a Date with Eastern time components.
+     * Accepts ISO 8601 (no timezone → treated as Eastern) or Unix timestamp (seconds).
+     * Returns a Date whose local-time fields (getHours, etc.) hold Eastern values. */
     function parseDate(raw) {
       if (!raw) return null;
       /* Unix timestamp (all digits) */
-      if (/^\d{9,}$/.test(raw)) return new Date(parseInt(raw, 10) * 1000);
-      /* If no timezone indicator, treat as Eastern */
-      if (!/[Zz]|[+-]\d{2}/.test(raw)) {
-        /* Append Eastern offset — use the date itself to determine EST/EDT.
-         * Parse naively first, then rebuild with the correct offset. */
-        var naive = new Date(raw);
-        /* Determine if DST: create date in UTC, check Eastern offset */
-        var jan = new Date(naive.getFullYear(), 0, 1);
-        var jul = new Date(naive.getFullYear(), 6, 1);
-        var stdOffset = Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
-        /* For US Eastern: std = 300 (EST=-5), dst = 240 (EDT=-4) */
-        /* We assume the input is Eastern, so convert to UTC */
-        var testDate = new Date(raw + '-05:00');
-        var isDST = testDate.getTimezoneOffset !== undefined;
-        /* Simpler: check if the month is in DST range (Mar-Nov roughly) */
-        var month = naive.getMonth(); /* 0-indexed */
-        var offset = (month >= 2 && month <= 10) ? '-04:00' : '-05:00';
-        return new Date(raw + offset);
+      if (/^\d{9,}$/.test(raw)) {
+        var utc = new Date(parseInt(raw, 10) * 1000);
+        /* Convert to Eastern components */
+        return new Date(utc.toLocaleString('en-US', { timeZone: 'America/New_York' }));
       }
-      return new Date(raw);
+      /* ISO-like string — extract components directly (already Eastern) */
+      var m = raw.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+      if (m) {
+        return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+      }
+      return null;
     }
 
     /* ── Main ── */
@@ -281,10 +273,8 @@
     var dt = parseDate(clean(params.get('date')));
     var loc = formatLocation(clean(params.get('location')));
     if (dt) {
-      /* Convert to Eastern for display */
-      var eastern = new Date(dt.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-      dateEl.textContent = formatDate(eastern);
-      tlEl.textContent = formatTime(eastern) + (loc ? ' in ' + loc : '');
+      dateEl.textContent = formatDate(dt);
+      tlEl.textContent = formatTime(dt) + (loc ? ' in ' + loc : '');
     } else {
       tlEl.textContent = loc;
     }
