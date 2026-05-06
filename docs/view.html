@@ -257,6 +257,14 @@
       return null;
     }
 
+    /* ── Referrer check ── */
+    var ref = document.referrer;
+    if (!ref || !/^https?:\/\/([a-z0-9-]+\.)*princeton\.edu(\/|$)/i.test(ref)) {
+      document.body.innerHTML = '<p style="font-family:sans-serif;padding:2em;text-align:center">' +
+        'This page is only accessible from orfe.princeton.edu</p>';
+      throw new Error('Blocked: referrer not from princeton.edu');
+    }
+
     /* ── Main ── */
     var params = new URLSearchParams(window.location.search);
 
