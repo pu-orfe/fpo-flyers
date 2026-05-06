@@ -83,17 +83,43 @@ The `view.html` page renders a flyer from URL query parameters, allowing externa
 | `committee` | No       | Comma-separated names. Mark the chair with `(Chair)` or `(Chair of the Committee)` after their name. |
 | `bg`        | No       | Background color name from the color table above. |
 
-**Drupal webform integration** — In a computed Twig token, construct the URL:
+**Drupal webform integration** — In a Computed Twig element on the source entity's webform, construct the URL. The template detects FPO events by title, extracts the dissertation title from `field_ps_events_subtitle`, the date and location from their respective fields, and parses committee members from the body field (`field_ps_body`). The body field returns a render array, so `|render` is required before `|striptags`.
 
 ```twig
-{% set candidate = webform_token('[webform_submission:source-entity:title]', webform_submission)|trim %}
-{% set title = webform_token('[webform_submission:source-entity:field_subtitle]', webform_submission)|trim %}
-{% set date = webform_token('[webform_submission:source-entity:field_ps_events_date:value]', webform_submission)|trim %}
-{% set location = webform_token('[webform_submission:source-entity:field_ps_events_location_name]', webform_submission)|trim %}
-<a href="https://pu-orfe.github.io/fpo-flyers/view.html?candidate={{ candidate|url_encode }}&title={{ title|url_encode }}&date={{ date|url_encode }}&location={{ location|url_encode }}&bg=tan">
-  Print FPO Flyer
-</a>
+{# 1. Get the node title and check for FPO #}
+{% set title = webform_token('[webform_submission:source-entity:title]', webform_submission)|trim %}
+
+{% if title matches '/^.{0,5}FPO/' %}
+    {# 2. Dissertation title #}
+    {% set dissertation = webform_token('[webform_submission:source-entity:field_ps_events_subtitle]', webform_submission)|trim %}
+
+    {# 3. Date and location #}
+    {% set date = webform_token('[webform_submission:source-entity:field_ps_events_date:value]', webform_submission)|trim %}
+    {% set location = webform_token('[webform_submission:source-entity:field_ps_events_location_name]', webform_submission)|trim %}
+
+    {# 4. Extract committee from body field — render first to flatten render array #}
+    {% set body = webform_token('[webform_submission:source-entity:field_ps_body]', webform_submission)|render|striptags|trim %}
+    {% set committee = '' %}
+    {% if body and 'members are ' in body %}
+        {% set raw = body|split('members are ')|last|trim|trim('.')|trim %}
+        {% set committee = raw|replace({'Professors ': '', 'Professor ': ''}) %}
+    {% endif %}
+
+    <a class="cke-button-secondary" href="https://pu-orfe.github.io/fpo-flyers/view.html?candidate={{ title|url_encode }}&title={{ dissertation|url_encode }}&date={{ date|url_encode }}&location={{ location|url_encode }}&committee={{ committee|url_encode }}&bg=tan">FPO Flyer</a>
+{% else %}
+    {# <p>Debug: Title detected as "{{ title }}"</p> #}
+{% endif %}
 ```
+
+**Field reference:**
+
+| Token | Drupal field | Notes |
+|-------|-------------|-------|
+| `title` | Node title | Expected format: `"FPO, Candidate Name"` |
+| `field_ps_events_subtitle` | Subtitle | Dissertation title |
+| `field_ps_events_date:value` | Event date | ISO 8601; `:value` suffix returns raw string |
+| `field_ps_events_location_name` | Location | e.g., `125 - Sherrerd Hall` |
+| `field_ps_body` | Body (description) | Render array — must use `\|render\|striptags`; committee names parsed from text after "members are" |
 
 ## CI/CD
 
