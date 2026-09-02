@@ -54,6 +54,25 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
+      # GitHub disables scheduled workflows after 60 days without repository
+      # activity. The feed can sit unchanged for a whole summer, so push a
+      # dated no-op commit before that window closes.
+      - name: Keep scheduled workflow alive
+        if: github.event_name == 'schedule'
+        run: |
+          AGE_DAYS=$(( ( $(date -u +%s) - $(git log -1 --format=%ct) ) / 86400 ))
+          echo "Days since last commit: $AGE_DAYS"
+          if [ "$AGE_DAYS" -lt 50 ]; then
+            echo "Recent activity; no keepalive needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .keepalive
+          git add .keepalive
+          git commit -m "[skip ci] Keepalive commit to prevent workflow deactivation"
+          git push
+
   # ── Full generation (only when feed changed or force) ──────────
   generate:
     needs: check
@@ -110,6 +129,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .feed_hash
           git diff --cached --quiet || git commit -m "[skip ci] Update feed hash"
+          git pull --rebase
           git push
 
       - name: Build site

@@ -127,3 +127,16 @@ The GitHub Actions workflow runs every 30 minutes and can be triggered manually.
 
 Trigger manually with force regeneration:
 **Actions → Generate FPO Flyers → Run workflow → check "Force regeneration"**
+
+### Scheduled-workflow deactivation
+
+GitHub disables scheduled workflows after 60 days without repository activity.
+The feed can sit unchanged for an entire summer, producing no commits, so the
+`check` job pushes a dated no-op commit to `.keepalive` once the last commit is
+50 days old.
+
+If the workflow is ever disabled anyway, the index page keeps serving the last
+deployed `manifest.json` and reports "No flyers currently available" while
+`view.html` still works, since it renders entirely from URL parameters. Confirm
+with `gh workflow list --all` (look for `disabled_inactivity`) and re-enable with
+`gh workflow enable generate.yml`.
