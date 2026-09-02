@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libffi-dev \
     libcairo2 \
     fonts-liberation \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -18,6 +19,9 @@ COPY tests/ tests/
 # those tests error on FileNotFound inside the image while passing on the host - the same
 # split that makes a test look green everywhere except the one place that gates a merge.
 COPY docs/ docs/
+# .github/ is needed for the same reason by tests/unit/test_workflow_keepalive.py, which
+# reads .github/workflows/generate.yml.
+COPY .github/ .github/
 
 RUN pip install --no-cache-dir ".[test]"
 
