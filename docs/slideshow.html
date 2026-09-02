@@ -6,18 +6,57 @@
   <title>FPO Flyers — Slideshow</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; width: 100%; overflow: hidden; background: #fff; }
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      display: block;
+    html, body { height: 100%; width: 100%; overflow: hidden; background: #1a1a1a; }
+
+    /* --- The board ---------------------------------------------------------------------
+     * All upcoming flyers at once rather than one at a time. Typically three, six, or at
+     * most nine are scheduled, and a public display should show the lot: somebody walking
+     * past reads the board, they do not wait fifteen seconds for the next slide.
+     */
+    #board {
+      position: absolute;
+      inset: var(--top-crop, 0px) 0 0 0;
+      display: grid;
+      gap: var(--gap, 16px);
+      padding: var(--gap, 16px);
     }
+    .cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    /* --- Each flyer -------------------------------------------------------------------
+     * FIXED VIEWPORT PLUS A TRANSFORM, never a resized iframe. The flyer's own type is set
+     * in clamp(), and those clamps have FLOORS - 36px headline, 14px body. Shrink the
+     * iframe and the floors take over, so the type gets proportionally BIGGER as the box
+     * gets smaller: at nine-up that clips "Announcement" off the top and pushes text
+     * outside the border. Rendering every flyer at a constant 850x1100 (US Letter at
+     * 100px/in) and scaling the result means the clamps always evaluate identically, so
+     * the proportions are exactly the printed ones at every board size.
+     *
+     * That proportion is the whole point of this page. The headline measures ~7.9% of
+     * flyer width, against 7.8% in print (48pt on an 8.5in page). Rendered full-width on
+     * a 16:9 frame - which is what this page used to do - it measures 3.4%, less than half
+     * print size, which is why the printed flyer and the screen never looked alike.
+     */
+    iframe {
+      width: 850px;
+      height: 1100px;
+      flex: 0 0 auto;
+      border: 0;
+      background: #fff;
+      transform: scale(var(--scale, 1));
+      transform-origin: center center;
+      box-shadow: 0 6px 28px rgba(0, 0, 0, 0.45);
+    }
+
+    /* --- Chrome, for humans only ------------------------------------------------------ */
     .controls {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      bottom: 0; left: 0; right: 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -25,46 +64,41 @@
       pointer-events: none;
       font-family: Georgia, "Times New Roman", serif;
     }
-    .controls > * {
-      pointer-events: auto;
-    }
-    .counter {
-      font-size: 20px;
-      color: #444;
-      letter-spacing: 0.02em;
-      user-select: none;
-    }
-    .nav-buttons {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+    .controls > * { pointer-events: auto; }
+    .counter { font-size: 20px; color: #ddd; letter-spacing: 0.02em; user-select: none; }
+    .nav-buttons { display: flex; align-items: center; gap: 0.5rem; }
     .nav-btn {
       cursor: pointer;
       font-family: Georgia, "Times New Roman", serif;
       font-size: 22px;
       color: #333;
-      background: rgba(255,255,255,0.85);
+      background: rgba(255, 255, 255, 0.85);
       border: 1.5px solid #bbb;
       border-radius: 4px;
-      width: 44px;
-      height: 44px;
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1;
+      transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+      user-select: none;
+    }
+    .nav-btn:hover { background: #333; border-color: #333; color: #fff; }
+
+    .message {
+      position: absolute;
+      inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      line-height: 1;
-      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-      user-select: none;
-    }
-    .nav-btn:hover {
-      background: #333;
-      border-color: #333;
-      color: #fff;
+      color: #ddd;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 28px;
+      text-align: center;
+      padding: 2rem;
     }
   </style>
 </head>
 <body>
-  <iframe id="viewer"></iframe>
+  <div id="board"></div>
   <div class="controls" id="controls" style="display:none">
     <span class="counter" id="counter"></span>
     <div class="nav-buttons">
@@ -74,72 +108,198 @@
     </div>
   </div>
   <script>
-    var colorNames = ['gold', 'olive', 'tan', 'sage', 'teal', 'plum', 'rose'];
-    var INTERVAL = 15000;
-    var files = [];
-    var current = 0;
-    var timer = null;
-    var playing = true;
-    var viewer = document.getElementById('viewer');
-    var counter = document.getElementById('counter');
+    var COLORS = ['gold', 'olive', 'tan', 'sage', 'teal', 'plum', 'rose'];
+    var PAGE_W = 850, PAGE_H = 1100;   /* the fixed flyer viewport, US Letter at 100px/in */
+    var GAP = 16;
+    var PER_PAGE = 9;                  /* beyond this the board pages instead of shrinking */
+    var INTERVAL = 15000;              /* only used when there is more than one page */
+    /* An examination in progress should stay on the board, so "upcoming" means it has not
+     * yet finished rather than has not yet started. An FPO runs about ninety minutes. */
+    var GRACE_MS = 3 * 60 * 60 * 1000;
+
+    var board = document.getElementById('board');
     var controls = document.getElementById('controls');
+    var counter = document.getElementById('counter');
     var pauseBtn = document.getElementById('pauseBtn');
 
-    function show(index) {
-      if (files.length === 0) return;
-      current = ((index % files.length) + files.length) % files.length;
-      var base = files[current].replace('.pdf', '');
-      var color = colorNames[current % colorNames.length];
-      viewer.src = base + '.html?bg=' + color;
-      if (files.length > 1) {
-        counter.textContent = (current + 1) + '\u2009/\u2009' + files.length;
+    var qs = new URLSearchParams(location.search);
+    var kiosk = qs.has('kiosk');
+    /* Pixels lost off the top of the frame before anyone sees it. The page-stream capture
+     * crops 64px to remove Chromium's automation banner, so laying the board out over the
+     * full viewport centres the flyers in a frame 64px taller than the visible one - which
+     * clips the top row. Zero for a browser, 64 for the display channel. */
+    var topCrop = Math.max(0, parseInt(qs.get('top'), 10) || 0);
+    board.style.setProperty('--top-crop', topCrop + 'px');
+
+    var pages = [];
+    var page = 0;
+    var timer = null;
+    var playing = true;
+
+    /* Accept BOTH manifest shapes. The manifest used to be an array of PDF filenames and
+     * is now an array of objects with the event data. A stale Pages deploy, or a rolled
+     * back generator, would otherwise blank the display - and this page is on a wall. */
+    function normalise(raw) {
+      if (!Array.isArray(raw)) return [];
+      return raw.map(function (item) {
+        if (typeof item === 'string') {
+          return { file: item.replace(/\.(pdf|html)$/i, ''), start: null };
+        }
+        return {
+          file: String(item.file || '').replace(/\.(pdf|html)$/i, ''),
+          start: item.start || null,
+          candidate: item.candidate || ''
+        };
+      }).filter(function (e) { return e.file; });
+    }
+
+    /* Entries with no date are KEPT. The old manifest carried none, and dropping them would
+     * turn a format mismatch into an empty board rather than a slightly stale one. */
+    function upcoming(entries, now) {
+      return entries.filter(function (e) {
+        if (!e.start) return true;
+        var t = Date.parse(e.start);
+        return isNaN(t) ? true : (t + GRACE_MS) >= now;
+      }).sort(function (a, b) {
+        return (Date.parse(a.start) || 0) - (Date.parse(b.start) || 0);
+      });
+    }
+
+    /* The grid that makes the flyers as large as possible, rather than a fixed column
+     * count. Three across is not always best: nine flyers are 39% larger as 5x2 than as
+     * 3x3, because a 3x3 cell is limited by height and wastes width. */
+    function bestGrid(n, w, h) {
+      var best = { cols: 1, rows: n, scale: 0 };
+      for (var cols = 1; cols <= n; cols++) {
+        var rows = Math.ceil(n / cols);
+        var cw = (w - 2 * GAP - GAP * (cols - 1)) / cols;
+        var ch = (h - 2 * GAP - GAP * (rows - 1)) / rows;
+        if (cw <= 0 || ch <= 0) continue;
+        /* Capped at 1: above it the flyer is being enlarged past the viewport its type was
+         * measured for, which both softens the render and is pointless - PAGE_W/PAGE_H are
+         * chosen precisely because the flyer's clamped type hits print proportions there.
+         * A larger source viewport would make the type proportionally SMALLER, not bigger,
+         * because the clamps cap at 52px regardless of viewport. */
+        var s = Math.min(cw / PAGE_W, ch / PAGE_H, 1);
+        if (s > best.scale) best = { cols: cols, rows: rows, scale: s };
       }
+      return best;
+    }
+
+    /* Same stock every time for a given candidate. Cycling by position meant a flyer
+     * changed colour whenever the feed reordered or another FPO was added. */
+    function colorFor(stem) {
+      var h = 0;
+      for (var i = 0; i < stem.length; i++) h = (h * 31 + stem.charCodeAt(i)) % 100000;
+      return COLORS[h % COLORS.length];
+    }
+
+    function message(text) {
+      board.innerHTML = '';
+      var d = document.createElement('div');
+      d.className = 'message';
+      d.textContent = text;
+      board.appendChild(d);
+    }
+
+    function render() {
+      var entries = pages[page] || [];
+      if (!entries.length) { message('No upcoming Final Public Oral examinations.'); return; }
+
+      var g = bestGrid(entries.length, board.clientWidth, board.clientHeight);
+      board.innerHTML = '';
+      board.style.setProperty('--gap', GAP + 'px');
+      board.style.gridTemplateColumns = 'repeat(' + g.cols + ', 1fr)';
+      board.style.gridTemplateRows = 'repeat(' + g.rows + ', 1fr)';
+
+      entries.forEach(function (e) {
+        var cell = document.createElement('div');
+        cell.className = 'cell';
+        var f = document.createElement('iframe');
+        f.style.setProperty('--scale', g.scale);
+        f.setAttribute('scrolling', 'no');
+        f.setAttribute('tabindex', '-1');
+        f.title = e.candidate ? ('FPO flyer: ' + e.candidate) : 'FPO flyer';
+        f.src = e.file + '.html?bg=' + colorFor(e.file);
+        cell.appendChild(f);
+        board.appendChild(cell);
+      });
+
+      if (pages.length > 1) counter.textContent = (page + 1) + ' / ' + pages.length;
     }
 
     function start() {
-      if (timer) return;
-      timer = setInterval(function() { show(current + 1); }, INTERVAL);
+      if (timer || pages.length < 2) return;
+      timer = setInterval(function () { page = (page + 1) % pages.length; render(); }, INTERVAL);
       playing = true;
       pauseBtn.innerHTML = '&Vert;';
       pauseBtn.title = 'Pause';
     }
-
     function stop() {
-      clearInterval(timer);
-      timer = null;
-      playing = false;
+      clearInterval(timer); timer = null; playing = false;
       pauseBtn.innerHTML = '&#9655;';
       pauseBtn.title = 'Play';
     }
 
-    document.getElementById('prevBtn').addEventListener('click', function() {
-      stop();
-      show(current - 1);
+    document.getElementById('prevBtn').addEventListener('click', function () {
+      stop(); page = (page - 1 + pages.length) % pages.length; render();
+    });
+    document.getElementById('nextBtn').addEventListener('click', function () {
+      stop(); page = (page + 1) % pages.length; render();
+    });
+    pauseBtn.addEventListener('click', function () { playing ? stop() : start(); });
+
+    /* The board is sized from the viewport, so a resize changes the best grid. Harmless on
+     * a display, necessary in a browser window. */
+    var resizeTimer = null;
+    window.addEventListener('resize', function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(render, 150);
     });
 
-    document.getElementById('nextBtn').addEventListener('click', function() {
-      stop();
-      show(current + 1);
-    });
-
-    pauseBtn.addEventListener('click', function() {
-      if (playing) { stop(); } else { start(); }
-    });
+    /* CHECK EACH FLYER EXISTS BEFORE PUTTING IT ON THE WALL.
+     *
+     * Observed, not hypothetical: Boris_Shigida.html returned 200 one hour and 404 the next
+     * as the feed changed and the site redeployed. The manifest and the flyers are written
+     * together so they normally agree, but this page is fetched hourly by a display and the
+     * site redeploys every thirty minutes - a fetch can land either side of a deploy, or on
+     * a cached manifest. An iframe pointed at a missing file renders GitHub's own 404 page,
+     * full width, on a public display.
+     *
+     * Same origin, so the status is readable. A flyer is dropped only on a definite HTTP
+     * error; a failed request (offline, blocked) keeps it, because a network blip must not
+     * empty the board. */
+    function existing(entries) {
+      return Promise.all(entries.map(function (e) {
+        return fetch(e.file + '.html', { method: 'HEAD' })
+          .then(function (r) { return r.ok ? e : null; })
+          .catch(function () { return e; });
+      })).then(function (checked) {
+        return checked.filter(Boolean);
+      });
+    }
 
     fetch('manifest.json')
-      .then(function(r) { return r.json(); })
-      .then(function(f) {
-        files = f;
-        if (files.length === 0) {
-          document.body.innerHTML = '<p style="padding:2rem;font-family:sans-serif">No flyers available.</p>';
-          return;
+      .then(function (r) { return r.json(); })
+      .then(function (raw) { return existing(upcoming(normalise(raw), Date.now())); })
+      .then(function (entries) {
+        if (!entries.length) { message('No upcoming Final Public Oral examinations.'); return; }
+        for (var i = 0; i < entries.length; i += PER_PAGE) {
+          pages.push(entries.slice(i, i + PER_PAGE));
         }
-        if (files.length > 1) {
-          controls.style.display = '';
-        }
-        show(0);
+        /* Controls exist for a person browsing, and only when there is more than one page
+         * to move between. A wall display has no pointer, so ?kiosk removes them. */
+        if (!kiosk && pages.length > 1) controls.style.display = '';
+        render();
         start();
+      })
+      .catch(function () {
+        message('Flyer list unavailable.');
       });
+
+    /* Exposed for tests; harmless in the browser. */
+    window.__fpo = { normalise: normalise, upcoming: upcoming, bestGrid: bestGrid,
+                     colorFor: colorFor, existing: existing };
   </script>
 </body>
 </html>

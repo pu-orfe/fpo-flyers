@@ -14,6 +14,10 @@ WORKDIR /app
 COPY pyproject.toml .
 COPY src/ src/
 COPY tests/ tests/
+# docs/ is needed because tests/unit/test_slideshow.py reads docs/slideshow.html. Without it
+# those tests error on FileNotFound inside the image while passing on the host - the same
+# split that makes a test look green everywhere except the one place that gates a merge.
+COPY docs/ docs/
 
 RUN pip install --no-cache-dir ".[test]"
 

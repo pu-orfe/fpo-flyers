@@ -121,16 +121,19 @@ jobs:
           cp docs/view.html _site/
           cp output/*.pdf _site/ 2>/dev/null || true
           cp output/*.html _site/ 2>/dev/null || true
-          # Generate a JSON manifest of PDFs for the index page
-          cd _site
-          echo "[" > manifest.json
-          first=true
-          for f in *.pdf; do
-            [ "$f" = "*.pdf" ] && break
-            if [ "$first" = true ]; then first=false; else echo "," >> manifest.json; fi
-            echo "  \"$f\"" >> manifest.json
-          done
-          echo "]" >> manifest.json
+          # The manifest is written by the generator now (src/fpo_flyers/manifest.py), so it
+          # carries the candidate, start time and location rather than just filenames.
+          # Assembling it here from `ls *.pdf` was why consumers could not tell an upcoming
+          # FPO from one that had already happened.
+          #
+          # An empty or absent manifest is still valid: the generator writes `[]` when the
+          # feed has no events, and this fallback covers a run where no flyers were produced
+          # at all, so the page never fetches a 404.
+          if [ -f output/manifest.json ]; then
+            cp output/manifest.json _site/manifest.json
+          else
+            echo "[]" > _site/manifest.json
+          fi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
