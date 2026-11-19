@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "fpo-flyers"
 version = "1.0.0"
 description = "Automated FPO flyer generation for Princeton ORFE"
-requires-python = ">=3.11"
+requires-python = ">=3.11.5"
 dependencies = [
     "icalendar>=6.0",
     "requests>=2.31",
