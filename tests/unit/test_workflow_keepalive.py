@@ -68,11 +68,11 @@ def test_hash_commit_not_gated_on_flyers(workflow: dict) -> None:
 def _make_repo(tmp_path: Path, days_ago: int) -> Path:
     """A clone whose HEAD commit is `days_ago` days old, with a real remote."""
     remote = tmp_path / "remote.git"
-    subprocess.run(["git", "init", "--bare", "-b", "main", str(remote)], check=True,
-                   capture_output=True)
+    subprocess.run(
+        ["git", "init", "--bare", "-b", "main", str(remote)], check=True, capture_output=True
+    )
     work = tmp_path / "work"
-    subprocess.run(["git", "clone", str(remote), str(work)], check=True,
-                   capture_output=True)
+    subprocess.run(["git", "clone", str(remote), str(work)], check=True, capture_output=True)
 
     env_git = {
         "GIT_AUTHOR_NAME": "Test",
@@ -81,42 +81,53 @@ def _make_repo(tmp_path: Path, days_ago: int) -> Path:
         "GIT_COMMITTER_EMAIL": "test@example.com",
     }
     stamp = subprocess.run(
-        ["python3", "-c",
-         f"import time;print(int(time.time()) - {days_ago} * 86400)"],
-        check=True, capture_output=True, text=True,
+        ["python3", "-c", f"import time;print(int(time.time()) - {days_ago} * 86400)"],
+        check=True,
+        capture_output=True,
+        text=True,
     ).stdout.strip()
     date = f"{stamp} +0000"
     (work / "README.md").write_text("seed\n", encoding="utf-8")
-    subprocess.run(["git", "add", "README.md"], cwd=work, check=True,
-                   capture_output=True)
+    subprocess.run(["git", "add", "README.md"], cwd=work, check=True, capture_output=True)
     subprocess.run(
         ["git", "commit", "-m", "seed"],
-        cwd=work, check=True, capture_output=True,
-        env={**env_git, "GIT_AUTHOR_DATE": date, "GIT_COMMITTER_DATE": date,
-             "PATH": "/usr/bin:/bin:/usr/local/bin"},
+        cwd=work,
+        check=True,
+        capture_output=True,
+        env={
+            **env_git,
+            "GIT_AUTHOR_DATE": date,
+            "GIT_COMMITTER_DATE": date,
+            "PATH": "/usr/bin:/bin:/usr/local/bin",
+        },
     )
-    subprocess.run(["git", "push", "-u", "origin", "main"], cwd=work, check=True,
-                   capture_output=True)
+    subprocess.run(
+        ["git", "push", "-u", "origin", "main"], cwd=work, check=True, capture_output=True
+    )
     return work
 
 
 def _run_keepalive(step: dict, repo: Path) -> subprocess.CompletedProcess:
     return subprocess.run(
         ["bash", "-e", "-c", step["run"]],
-        cwd=repo, capture_output=True, text=True,
+        cwd=repo,
+        capture_output=True,
+        text=True,
         env={"PATH": "/usr/bin:/bin:/usr/local/bin", "HOME": str(repo.parent)},
     )
 
 
 def test_keepalive_noop_when_repo_is_active(keepalive_step, tmp_path) -> None:
     repo = _make_repo(tmp_path, days_ago=10)
-    before = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True,
-                            capture_output=True, text=True).stdout
+    before = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True, text=True
+    ).stdout
     result = _run_keepalive(keepalive_step, repo)
     assert result.returncode == 0, result.stderr
     assert "no keepalive needed" in result.stdout
-    after = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True,
-                           capture_output=True, text=True).stdout
+    after = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True, text=True
+    ).stdout
     assert before == after
 
 
@@ -124,15 +135,20 @@ def test_keepalive_commits_before_the_60_day_cutoff(keepalive_step, tmp_path) ->
     repo = _make_repo(tmp_path, days_ago=55)
     result = _run_keepalive(keepalive_step, repo)
     assert result.returncode == 0, result.stderr
-    subject = subprocess.run(["git", "log", "-1", "--format=%s"], cwd=repo,
-                             check=True, capture_output=True, text=True).stdout
+    subject = subprocess.run(
+        ["git", "log", "-1", "--format=%s"], cwd=repo, check=True, capture_output=True, text=True
+    ).stdout
     assert "Keepalive" in subject
     assert "[skip ci]" in subject
     assert (repo / ".keepalive").exists()
     # And it actually reached the remote, which is what resets the timer.
     remote_head = subprocess.run(
         ["git", "log", "-1", "--format=%s", "origin/main"],
-        cwd=repo, check=True, capture_output=True, text=True).stdout
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
     assert "Keepalive" in remote_head
 
 

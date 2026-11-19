@@ -24,12 +24,7 @@ NODE24_MIN_MAJOR = {
 
 def _uses() -> list[str]:
     wf = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
-    return [
-        step["uses"]
-        for job in wf["jobs"].values()
-        for step in job["steps"]
-        if "uses" in step
-    ]
+    return [step["uses"] for job in wf["jobs"].values() for step in job["steps"] if "uses" in step]
 
 
 def test_every_action_is_known() -> None:

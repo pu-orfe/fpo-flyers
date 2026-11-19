@@ -49,7 +49,5 @@ def write_manifest(events: list[FPOEvent], output_dir: Path) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / MANIFEST_NAME
     # Trailing newline so the file is diffable and shell-friendly, matching .feed_hash.
-    path.write_text(
-        json.dumps(manifest_entries(events), indent=2) + "\n", encoding="utf-8"
-    )
+    path.write_text(json.dumps(manifest_entries(events), indent=2) + "\n", encoding="utf-8")
     return path
