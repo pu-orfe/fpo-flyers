@@ -75,6 +75,11 @@ def main(
     events = parse_events(ics_text)
     if not events:
         logger.warning("No FPO events found in feed.")
+        # Record the empty state so the next run sees the feed as unchanged.
+        # Without the hash, every scheduled run rebuilt and redeployed the site.
+        write_manifest(events, output_dir)
+        write_hash(hash_file, current_hash)
+        logger.info("Hash updated: %s", current_hash[:12])
         sys.exit(0)
 
     logger.info("Found %d event(s)", len(events))

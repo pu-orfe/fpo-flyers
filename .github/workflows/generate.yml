@@ -115,15 +115,10 @@ jobs:
             set -- "$@" --bypass-header "$BYPASS_HEADER"
           fi
           fpo-flyers "$@"
-          # Check if any flyers were generated
-          if ls output/*.pdf 1>/dev/null 2>&1; then
-            echo "has_flyers=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_flyers=false" >> "$GITHUB_OUTPUT"
-          fi
 
+      # Commit the hash even when the feed has no events. Otherwise the stored
+      # hash never matches an empty feed and every scheduled run redeploys.
       - name: Commit hash file
-        if: steps.generate.outputs.has_flyers == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
