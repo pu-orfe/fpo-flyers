@@ -7,14 +7,14 @@ These tests pin the fields that fixed that.
 """
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fpo_flyers.manifest import manifest_entries, write_manifest
 from fpo_flyers.models import FPOEvent
 from fpo_flyers.renderer import render_html_flyer, render_pdf
 
 
-def _event(name="Shange Tang", when=datetime(2026, 3, 2, 18, 0, tzinfo=timezone.utc)):
+def _event(name="Shange Tang", when=datetime(2026, 3, 2, 18, 0, tzinfo=UTC)):
     return FPOEvent(
         uid=f"uid-{name}",
         candidate_name=name,

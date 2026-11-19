@@ -1,6 +1,6 @@
 """Tests for data models."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fpo_flyers.models import EASTERN, CommitteeMember, FPOEvent
 
@@ -10,8 +10,8 @@ def _make_event(**kwargs) -> FPOEvent:
         "uid": "test-uid-1",
         "candidate_name": "Shange Tang",
         # 2026-03-02 18:00 UTC = 2026-03-02 13:00 ET
-        "start": datetime(2026, 3, 2, 18, 0, tzinfo=timezone.utc),
-        "end": datetime(2026, 3, 2, 19, 30, tzinfo=timezone.utc),
+        "start": datetime(2026, 3, 2, 18, 0, tzinfo=UTC),
+        "end": datetime(2026, 3, 2, 19, 30, tzinfo=UTC),
         "location": "125 - Sherrerd Hall",
     }
     defaults.update(kwargs)
@@ -44,11 +44,11 @@ class TestFPOEvent:
         assert event.formatted_time == "1:00 pm"
 
     def test_formatted_time_with_minutes(self):
-        event = _make_event(start=datetime(2026, 3, 2, 18, 30, tzinfo=timezone.utc))
+        event = _make_event(start=datetime(2026, 3, 2, 18, 30, tzinfo=UTC))
         assert event.formatted_time == "1:30 pm"
 
     def test_formatted_time_morning(self):
-        event = _make_event(start=datetime(2026, 3, 2, 15, 0, tzinfo=timezone.utc))
+        event = _make_event(start=datetime(2026, 3, 2, 15, 0, tzinfo=UTC))
         assert event.formatted_time == "10:00 am"
 
     def test_formatted_location(self):
