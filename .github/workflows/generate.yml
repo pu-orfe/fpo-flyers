@@ -115,7 +115,8 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             libpango-1.0-0 libpangocairo-1.0-0 \
             libgdk-pixbuf-2.0-0 libffi-dev libcairo2 libharfbuzz-subset0 \
-            fonts-liberation
+            fonts-liberation \
+            zsh  # tests/unit/test_ruleset.py runs scripts/apply-ruleset.sh
 
       - name: Install Python dependencies
         run: uv sync --locked --extra test

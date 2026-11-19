@@ -292,3 +292,12 @@ def test_pages_actions_on_v5(workflow: dict) -> None:
     the artifact format of its counterpart."""
     assert _uses(workflow, "actions/upload-pages-artifact@") == "actions/upload-pages-artifact@v5"
     assert _uses(workflow, "actions/deploy-pages@") == "actions/deploy-pages@v5"
+
+
+def test_generate_job_has_test_tools(workflow: dict) -> None:
+    """The generate job runs the unit tests on the bare runner, not in
+    Dockerfile.test, so it needs the same test-only tools: zsh and jq run
+    scripts/apply-ruleset.sh in tests/unit/test_ruleset.py. The Ubuntu runner
+    has jq but not zsh."""
+    install = _step(workflow, "generate", "Install system dependencies")["run"]
+    assert "zsh" in install.split()
