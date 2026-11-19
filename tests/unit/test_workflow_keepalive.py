@@ -140,3 +140,16 @@ def test_keepalive_fires_with_margin_before_deactivation(keepalive_step) -> None
     """Threshold must leave room for the 30-minute cron to land a run."""
     run = keepalive_step["run"]
     assert '"$AGE_DAYS" -lt 50' in run
+
+
+def _uses(workflow: dict, prefix: str) -> str:
+    steps = workflow["jobs"]["generate"]["steps"]
+    return next(s["uses"] for s in steps if s.get("uses", "").startswith(prefix))
+
+
+def test_pages_actions_on_v5(workflow: dict) -> None:
+    """v4/v3 target the deprecated Node 20 runtime. The upload and deploy
+    actions must move together: each major expects the artifact format of
+    its counterpart."""
+    assert _uses(workflow, "actions/upload-pages-artifact@") == "actions/upload-pages-artifact@v5"
+    assert _uses(workflow, "actions/deploy-pages@") == "actions/deploy-pages@v5"
