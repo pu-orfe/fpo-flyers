@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import requests
 from icalendar import Calendar
@@ -77,14 +77,14 @@ def parse_events(ics_text: str) -> list[FPOEvent]:
 
         dt_start = component.get("DTSTART")
         dt_end = component.get("DTEND")
-        start = dt_start.dt if dt_start else datetime.now(timezone.utc)
+        start = dt_start.dt if dt_start else datetime.now(UTC)
         end = dt_end.dt if dt_end else start
 
         # Ensure timezone-aware
         if start.tzinfo is None:
-            start = start.replace(tzinfo=timezone.utc)
+            start = start.replace(tzinfo=UTC)
         if end.tzinfo is None:
-            end = end.replace(tzinfo=timezone.utc)
+            end = end.replace(tzinfo=UTC)
 
         candidate = extract_candidate_name(summary)
         committee = parse_committee(description)

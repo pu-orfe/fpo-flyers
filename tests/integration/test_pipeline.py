@@ -1,12 +1,8 @@
 """Integration test: full pipeline with mocked HTTP."""
 
-from datetime import datetime, timezone
-from pathlib import Path
-
 import pytest
 import responses
 
-from fpo_flyers.change_detection import read_stored_hash
 from fpo_flyers.feed import FEED_URL, compute_feed_hash, fetch_feed, parse_events
 from fpo_flyers.renderer import render_html_flyer, render_pdf
 from fpo_flyers.scraper import scrape_event_page

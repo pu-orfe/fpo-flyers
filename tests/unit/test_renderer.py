@@ -1,18 +1,17 @@
 """Tests for flyer renderer."""
 
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import UTC, datetime
 
 from fpo_flyers.models import CommitteeMember, FPOEvent
-from fpo_flyers.renderer import TEMPLATES_DIR, render_html, render_html_flyer, render_ipad_html
+from fpo_flyers.renderer import render_html, render_html_flyer, render_ipad_html
 
 
 def _sample_event() -> FPOEvent:
     return FPOEvent(
         uid="test-uid",
         candidate_name="Shange Tang",
-        start=datetime(2026, 3, 2, 18, 0, tzinfo=timezone.utc),
-        end=datetime(2026, 3, 2, 21, 0, tzinfo=timezone.utc),
+        start=datetime(2026, 3, 2, 18, 0, tzinfo=UTC),
+        end=datetime(2026, 3, 2, 21, 0, tzinfo=UTC),
         location="125 - Sherrerd Hall",
         committee=[
             CommitteeMember("Jianqing Fan", is_chair=True),

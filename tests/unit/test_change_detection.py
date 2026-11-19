@@ -1,7 +1,5 @@
 """Tests for change detection."""
 
-from pathlib import Path
-
 from fpo_flyers.change_detection import has_changed, read_stored_hash, write_hash
 
 
