@@ -161,5 +161,32 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
 
+  # ── Deploy (separate job, as in GitHub's Pages starter workflow) ──
+  # Deploying in the same job, milliseconds after the upload finalizes, sometimes
+  # fails with 'No artifacts named "github-pages" were found': the artifact is not
+  # yet visible to the API. The job boundary gives it time; one retry covers the rest.
+  deploy:
+    needs: generate
+    if: ${{ always() && needs.generate.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url || steps.retry.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v5
+        continue-on-error: true
+
+      - name: Wait before retrying
+        if: steps.deploy.outcome == 'failure'
+        run: sleep 30
+
+      # No continue-on-error: a second failure fails the run.
+      - name: Retry deploy
+        id: retry
+        if: steps.deploy.outcome == 'failure'
         uses: actions/deploy-pages@v5

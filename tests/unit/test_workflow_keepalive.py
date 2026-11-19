@@ -160,7 +160,7 @@ def test_keepalive_fires_with_margin_before_deactivation(keepalive_step) -> None
 
 
 def _uses(workflow: dict, prefix: str) -> str:
-    steps = workflow["jobs"]["generate"]["steps"]
+    steps = [s for job in workflow["jobs"].values() for s in job["steps"]]
     return next(s["uses"] for s in steps if s.get("uses", "").startswith(prefix))
 
 
