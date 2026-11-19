@@ -8,7 +8,8 @@ Fetches events from the department ICS feed, scrapes dissertation titles from ev
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install ".[test]"
+pip install --require-hashes -r requirements-dev.lock
+pip install --no-deps --no-build-isolation -e .
 fpo-flyers --output-dir output --force --verbose
 ```
 
@@ -25,6 +26,31 @@ python -m pytest tests/integration/ -v -m integration
 docker-compose run unit-tests
 docker-compose run integration-tests
 ```
+
+## Lint and type checks
+
+```bash
+ruff check src tests
+ruff format --check src tests
+mypy
+```
+
+## Updating dependencies
+
+Python dependencies are locked with hashes in `requirements.lock` (runtime) and
+`requirements-dev.lock` (runtime, tests, and lint tools). Both also lock the build backend from
+`requirements-build.in`. After editing dependencies in `pyproject.toml`, or to pick up new
+releases, regenerate both with [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv pip compile pyproject.toml requirements-build.in --universal --python-version 3.11 \
+  --generate-hashes --upgrade -o requirements.lock
+uv pip compile pyproject.toml requirements-build.in --universal --python-version 3.11 \
+  --generate-hashes --upgrade --extra test --extra dev -o requirements-dev.lock
+```
+
+Drop `--upgrade` to change only what `pyproject.toml` requires. The Docker base image and GitHub
+Actions are pinned too; Dependabot opens weekly PRs for those.
 
 ## Docker
 

@@ -1,0 +1,12 @@
+# Python dependencies are locked with uv (see README, "Updating dependencies").
+# Dependabot's pip updater does not regenerate uv's hashes, so it is not enabled.
+version: 2
+updates:
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
