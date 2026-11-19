@@ -56,6 +56,15 @@ def test_hash_commit_rebases_before_push(workflow: dict) -> None:
     assert run.index("git pull --rebase") < run.index("git push")
 
 
+def test_hash_commit_not_gated_on_flyers(workflow: dict) -> None:
+    """With no events there are no PDFs. If the hash commit waits for PDFs,
+    the stored hash never matches an empty feed and every scheduled tick
+    rebuilds and redeploys the site."""
+    steps = workflow["jobs"]["generate"]["steps"]
+    commit = next(s for s in steps if s.get("name") == "Commit hash file")
+    assert "has_flyers" not in str(commit.get("if", ""))
+
+
 def _make_repo(tmp_path: Path, days_ago: int) -> Path:
     """A clone whose HEAD commit is `days_ago` days old, with a real remote."""
     remote = tmp_path / "remote.git"
