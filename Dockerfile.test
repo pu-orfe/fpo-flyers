@@ -20,6 +20,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libharfbuzz-subset0 \
     fonts-liberation \
     git \
+    jq \
+    zsh \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -37,6 +39,8 @@ COPY docs/ docs/
 COPY .github/ .github/
 # tests/unit/test_dependency_pinning.py reads the Dockerfiles.
 COPY Dockerfile Dockerfile.test ./
+# tests/unit/test_ruleset.py runs scripts/apply-ruleset.sh against a stub gh.
+COPY scripts/ scripts/
 
 RUN uv sync --locked --extra test --extra dev --no-cache
 

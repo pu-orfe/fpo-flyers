@@ -55,6 +55,20 @@ workflows, and local setup) runs `uv sync --locked`, which fails if the lock is 
 - **Python:** the project stays on 3.12. A new minor needs the Docker images and the workflows'
   `python-version` changed together, so Dependabot proposes only 3.12.x image updates.
 
+## Branch protection
+
+`main` only moves when the CI `lint` and `test` jobs pass. Force-pushes and deletion are
+blocked. The rule is a repository ruleset defined in `.github/rulesets/main.json`. The GitHub
+Actions app may bypass it, so `generate.yml` can still push feed-hash and keepalive commits.
+
+After changing the JSON, or adding a CI job (a test requires every CI job to be listed), apply it
+with an admin `gh` login:
+
+```bash
+scripts/apply-ruleset.sh --dry-run   # show what would be sent
+scripts/apply-ruleset.sh             # create or update the ruleset
+```
+
 ## Docker
 
 ```bash
