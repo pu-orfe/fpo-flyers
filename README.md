@@ -7,11 +7,16 @@ Fetches events from the department ICS feed, scrapes dissertation titles from ev
 ## Quick Start
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
-pip install --require-hashes -r requirements-dev.lock
-pip install --no-deps --no-build-isolation -e .
+# Requires uv: https://docs.astral.sh/uv/
+uv sync --extra test --extra dev
+source .venv/bin/activate
 fpo-flyers --output-dir output --force --verbose
 ```
+
+On macOS, install WeasyPrint's libraries with `brew install pango`. The project prefers the
+Homebrew Python (`python-preference = "system"`), which finds them. If you use a uv-managed Python
+instead (for example with `UV_MANAGED_PYTHON=1`), it does not search Homebrew's library directory,
+so also run `export DYLD_FALLBACK_LIBRARY_PATH="$(brew --prefix)/lib"`.
 
 ## Testing
 
@@ -37,20 +42,18 @@ mypy
 
 ## Updating dependencies
 
-Python dependencies are locked with hashes in `requirements.lock` (runtime) and
-`requirements-dev.lock` (runtime, tests, and lint tools). Both also lock the build backend from
-`requirements-build.in`. After editing dependencies in `pyproject.toml`, or to pick up new
-releases, regenerate both with [uv](https://docs.astral.sh/uv/):
+All Python dependencies, with hashes, are locked in `uv.lock`. Every install (the Dockerfiles, the
+workflows, and local setup) runs `uv sync --locked`, which fails if the lock is out of date.
 
-```bash
-uv pip compile pyproject.toml requirements-build.in --universal --python-version 3.11 \
-  --generate-hashes --upgrade -o requirements.lock
-uv pip compile pyproject.toml requirements-build.in --universal --python-version 3.11 \
-  --generate-hashes --upgrade --extra test --extra dev -o requirements-dev.lock
-```
-
-Drop `--upgrade` to change only what `pyproject.toml` requires. The Docker base image and GitHub
-Actions are pinned too; Dependabot opens weekly PRs for those.
+- **Routine updates:** Dependabot opens weekly PRs that update `uv.lock` (minor and patch updates
+  grouped together, majors separately), plus the Docker images and GitHub Actions. CI must pass
+  before they merge.
+- **After editing dependencies in `pyproject.toml`:** run `uv lock` and commit `uv.lock`. CI
+  runs `uv lock --check`.
+- **Build backend:** `uv.lock` does not cover it, so `setuptools` and `setuptools-scm` are pinned
+  in `[tool.uv] build-constraint-dependencies` in `pyproject.toml`. Update those by hand.
+- **Python:** the project stays on 3.12. A new minor needs the Docker images and the workflows'
+  `python-version` changed together, so Dependabot proposes only 3.12.x image updates.
 
 ## Docker
 

@@ -24,10 +24,20 @@ jobs:
         with:
           python-version: "3.12"
 
+      # Version pinned here; uv.lock pins everything it installs.
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.3.3
+        with:
+          version: "0.13.9"
+          python-version: "3.12"
+          activate-environment: true
+
+      # Fails if uv.lock is out of date with pyproject.toml.
+      - name: Lockfile matches pyproject.toml
+        run: uv lock --check
+
       - name: Install locked dependencies
-        run: |
-          pip install --require-hashes -r requirements-dev.lock
-          pip install --no-deps --no-build-isolation .
+        run: uv sync --locked --extra test --extra dev
 
       - name: Ruff lint
         run: ruff check src tests
@@ -37,16 +47,6 @@ jobs:
 
       - name: Mypy
         run: mypy
-
-      # Recompile without --upgrade: the output changes only if pyproject.toml or
-      # requirements-build.in changed without the lockfiles being regenerated.
-      - name: Lockfiles match pyproject.toml
-        run: |
-          uv pip compile pyproject.toml requirements-build.in --universal --python-version 3.11 \
-            --generate-hashes -o requirements.lock
-          uv pip compile pyproject.toml requirements-build.in --universal --python-version 3.11 \
-            --generate-hashes --extra test --extra dev -o requirements-dev.lock
-          git diff --exit-code requirements.lock requirements-dev.lock
 
   test:
     runs-on: ubuntu-latest

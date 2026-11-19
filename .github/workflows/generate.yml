@@ -87,6 +87,14 @@ jobs:
         with:
           python-version: "3.12"
 
+      # Version pinned here; uv.lock pins everything it installs.
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.3.3
+        with:
+          version: "0.13.9"
+          python-version: "3.12"
+          activate-environment: true
+
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -96,9 +104,7 @@ jobs:
             fonts-liberation
 
       - name: Install Python dependencies
-        run: |
-          pip install --require-hashes -r requirements-dev.lock
-          pip install --no-deps --no-build-isolation .
+        run: uv sync --locked --extra test
 
       - name: Run unit tests
         run: python -m pytest tests/unit/ -v

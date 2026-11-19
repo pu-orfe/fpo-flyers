@@ -1,5 +1,14 @@
-# Exact tag plus multi-arch digest; Dependabot proposes updates.
+# Exact tags plus multi-arch digests; Dependabot proposes updates.
+FROM ghcr.io/astral-sh/uv:0.13.9@sha256:d3b601f0c7b118bc1753febf7c41cc80981df678445e0254284eecf84db79a7d AS uv
 FROM python:3.12.16-slim-trixie@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b
+
+COPY --from=uv /uv /usr/local/bin/uv
+# Install into a fixed venv using the image's Python; never download another interpreter.
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    PATH="/opt/venv/bin:$PATH"
 
 # WeasyPrint system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -13,14 +22,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-# Dependencies first, from the hashed lockfile, so this layer caches across source edits.
-COPY requirements.lock .
-RUN pip install --no-cache-dir --require-hashes -r requirements.lock
+# Dependencies first, from uv.lock, so this layer caches across source edits.
+COPY pyproject.toml uv.lock ./
+RUN uv sync --locked --no-install-project --no-dev --no-cache
 
-COPY pyproject.toml .
 COPY src/ src/
-# The lock already holds every dependency and the build backend: do not re-resolve.
-RUN pip install --no-cache-dir --no-deps --no-build-isolation .
+RUN uv sync --locked --no-dev --no-editable --no-cache
 
 ENTRYPOINT ["fpo-flyers"]
 CMD ["--output-dir", "/app/output", "--verbose"]
