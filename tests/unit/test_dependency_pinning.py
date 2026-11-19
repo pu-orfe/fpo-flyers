@@ -80,3 +80,18 @@ def test_dependabot_tracks_pins() -> None:
     cfg = yaml.safe_load((ROOT / ".github/dependabot.yml").read_text(encoding="utf-8"))
     ecosystems = {u["package-ecosystem"] for u in cfg["updates"]}
     assert {"docker", "github-actions"} <= ecosystems
+
+
+def test_dependabot_keeps_python_minor() -> None:
+    """Moving to a new Python minor (3.12 -> 3.15) also needs the workflow's
+    python-version and a relocked dependency set, so it must be a deliberate
+    change. Dependabot should only propose 3.12.x patches and digest refreshes."""
+    cfg = yaml.safe_load((ROOT / ".github/dependabot.yml").read_text(encoding="utf-8"))
+    docker = next(u for u in cfg["updates"] if u["package-ecosystem"] == "docker")
+    ignored = {
+        t
+        for rule in docker.get("ignore", [])
+        if rule.get("dependency-name") == "python"
+        for t in rule.get("update-types", [])
+    }
+    assert {"version-update:semver-major", "version-update:semver-minor"} <= ignored
