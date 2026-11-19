@@ -113,6 +113,7 @@ def _run_keepalive(step: dict, repo: Path) -> subprocess.CompletedProcess:
         cwd=repo,
         capture_output=True,
         text=True,
+        check=False,  # callers assert on returncode and output
         env={"PATH": "/usr/bin:/bin:/usr/local/bin", "HOME": str(repo.parent)},
     )
 

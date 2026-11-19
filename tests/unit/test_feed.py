@@ -1,5 +1,7 @@
 """Tests for ICS feed parsing and hashing."""
 
+import pytest
+import requests
 import responses
 
 from fpo_flyers.feed import (
@@ -73,9 +75,7 @@ class TestFetchFeed:
     @responses.activate
     def test_fetch_http_error(self):
         responses.add(responses.GET, FEED_URL, status=500)
-        import pytest
-
-        with pytest.raises(Exception):
+        with pytest.raises(requests.HTTPError):
             fetch_feed()
 
 
