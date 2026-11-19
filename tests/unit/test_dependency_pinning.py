@@ -137,3 +137,21 @@ def test_dependabot_keeps_python_minor() -> None:
         for t in rule.get("update-types", [])
     }
     assert {"version-update:semver-major", "version-update:semver-minor"} <= ignored
+
+
+def test_lock_has_one_version_per_package() -> None:
+    """A package locked at two versions means uv split the resolution by Python
+    version, and the older pin can carry known vulnerabilities that Dependabot
+    cannot fix. soupsieve 2.10 (GHSA-mmhr-3c5m-f64f, GHSA-6655-6qjp-jx7x,
+    GHSA-7g44-g9rc-x53w) was locked for Python < 3.11.5 this way."""
+    seen: dict[str, list[str]] = {}
+    for pkg in _lock()["package"]:
+        seen.setdefault(pkg["name"], []).append(pkg["version"])
+    split = {name: versions for name, versions in seen.items() if len(versions) > 1}
+    assert not split, f"split resolution: {split}"
+
+
+def test_soupsieve_patched() -> None:
+    versions = [p["version"] for p in _lock()["package"] if p["name"] == "soupsieve"]
+    assert versions
+    assert all(int(v.split(".")[0]) >= 4 for v in versions), versions
