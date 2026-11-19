@@ -19,6 +19,7 @@ NODE24_MIN_MAJOR = {
     "actions/setup-python": 6,
     "actions/upload-pages-artifact": 5,
     "actions/deploy-pages": 5,
+    "astral-sh/setup-uv": 7,
 }
 
 

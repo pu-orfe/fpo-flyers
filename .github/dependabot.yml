@@ -1,13 +1,22 @@
-# Python dependencies are locked with uv (see README, "Updating dependencies").
-# Dependabot's pip updater does not regenerate uv's hashes, so it is not enabled.
 version: 2
 updates:
+  # Python dependencies: Dependabot regenerates uv.lock, hashes included.
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      # One PR for routine minor/patch updates; majors stay separate for review.
+      python-minor-and-patch:
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: docker
     directory: /
     schedule:
       interval: weekly
-    # A new Python minor also needs the workflow's python-version and new
-    # lockfiles, so make that move by hand. Take 3.12.x patches and digests.
+    # A new Python minor also needs the workflows' python-version, so make that
+    # move by hand. Take 3.12.x patches and digests.
     ignore:
       - dependency-name: python
         update-types:

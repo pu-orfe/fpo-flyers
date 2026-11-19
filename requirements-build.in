@@ -1,3 +1,0 @@
-# Build backend from pyproject.toml [build-system], locked so builds use pinned versions.
-setuptools>=68.0
-setuptools-scm>=8.0

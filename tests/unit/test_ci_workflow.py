@@ -41,17 +41,15 @@ def test_read_only_token(ci: dict) -> None:
         "ruff check src tests",
         "ruff format --check src tests",
         "mypy",
-        "pip install --require-hashes -r requirements-dev.lock",
+        "uv sync --locked --extra test --extra dev",
     ],
 )
 def test_lint_and_type_checks(ci: dict, command: str) -> None:
     assert command in _runs(ci)
 
 
-def test_lockfiles_checked_against_pyproject(ci: dict) -> None:
-    runs = _runs(ci)
-    assert "uv pip compile" in runs
-    assert "git diff --exit-code requirements.lock requirements-dev.lock" in runs
+def test_lockfile_checked_against_pyproject(ci: dict) -> None:
+    assert "uv lock --check" in _runs(ci)
 
 
 def test_tests_run_in_container(ci: dict) -> None:
