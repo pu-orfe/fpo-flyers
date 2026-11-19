@@ -6,6 +6,13 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # A new Python minor also needs the workflow's python-version and new
+    # lockfiles, so make that move by hand. Take 3.12.x patches and digests.
+    ignore:
+      - dependency-name: python
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
   - package-ecosystem: github-actions
     directory: /
     schedule:
