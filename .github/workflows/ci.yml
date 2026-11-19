@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install locked dependencies
+        run: |
+          pip install --require-hashes -r requirements-dev.lock
+          pip install --no-deps --no-build-isolation .
+
+      - name: Ruff lint
+        run: ruff check src tests
+
+      - name: Ruff format
+        run: ruff format --check src tests
+
+      - name: Mypy
+        run: mypy
+
+      # Recompile without --upgrade: the output changes only if pyproject.toml or
+      # requirements-build.in changed without the lockfiles being regenerated.
+      - name: Lockfiles match pyproject.toml
+        run: |
+          uv pip compile pyproject.toml requirements-build.in --universal --python-version 3.11 \
+            --generate-hashes -o requirements.lock
+          uv pip compile pyproject.toml requirements-build.in --universal --python-version 3.11 \
+            --generate-hashes --extra test --extra dev -o requirements-dev.lock
+          git diff --exit-code requirements.lock requirements-dev.lock
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # Same image and command as `docker-compose run unit-tests`.
+      - name: Build test image
+        run: docker build -f Dockerfile.test -t fpo-flyers-test .
+
+      # pytest exits non-zero when no tests are collected, so an empty run fails.
+      - name: Unit tests
+        run: docker run --rm fpo-flyers-test -v tests/unit/ -m "not integration"
+
+      - name: Build production image
+        run: docker build -f Dockerfile -t fpo-flyers .
