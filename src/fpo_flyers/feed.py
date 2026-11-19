@@ -45,12 +45,10 @@ def parse_committee(description: str) -> list[CommitteeMember]:
 
     members: list[CommitteeMember] = []
     for part in parts:
-        is_chair = False
-        if "(Chair" in part:
-            is_chair = True
-            part = re.sub(r"\s*\(Chair[^)]*\)", "", part).strip()
-        if part:
-            members.append(CommitteeMember(name=part, is_chair=is_chair))
+        is_chair = "(Chair" in part
+        name = re.sub(r"\s*\(Chair[^)]*\)", "", part).strip() if is_chair else part
+        if name:
+            members.append(CommitteeMember(name=name, is_chair=is_chair))
     return members
 
 

@@ -91,7 +91,8 @@ def main(
                 event.dissertation_title = info["dissertation_title"]
                 event.dissertation_pdf_url = info["dissertation_pdf_url"]
                 logger.debug("  Title: %s", event.dissertation_title or "(not found)")
-            except Exception:
+            # A scrape failure must not block the flyer: render it without the title.
+            except Exception:  # noqa: BLE001
                 logger.warning("  Could not scrape event page: %s", event.event_url)
 
         pdf_path = render_pdf(event, output_dir)

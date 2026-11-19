@@ -42,6 +42,8 @@ def parse_event_html(html: str) -> dict[str, str]:
     if virtual_field:
         link = virtual_field.find("a", href=True)
         if link:
-            result["dissertation_pdf_url"] = link["href"]
+            href = link.get("href")
+            if isinstance(href, str):
+                result["dissertation_pdf_url"] = href
 
     return result
