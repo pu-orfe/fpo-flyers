@@ -28,3 +28,6 @@ Thumbs.db
 
 # Claude
 .claude/
+
+# Written by local fpo-flyers runs; CI publishes the hash with the site instead.
+.feed_hash

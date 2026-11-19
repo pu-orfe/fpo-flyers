@@ -58,8 +58,8 @@ workflows, and local setup) runs `uv sync --locked`, which fails if the lock is 
 ## Branch protection
 
 `main` only moves when the CI `lint` and `test` jobs pass. Force-pushes and deletion are
-blocked. The rule is a repository ruleset defined in `.github/rulesets/main.json`. The GitHub
-Actions app may bypass it, so `generate.yml` can still push feed-hash and keepalive commits.
+blocked. The rule is a repository ruleset defined in `.github/rulesets/main.json`, with no
+bypass. `generate.yml` never pushes to `main` (see "CI/CD" below), so nothing needs one.
 
 After changing the JSON, or adding a CI job (a test requires every CI job to be listed), apply it
 with an admin `gh` login:
@@ -168,15 +168,20 @@ The `view.html` page renders a flyer from URL query parameters, allowing externa
 
 The GitHub Actions workflow runs every 30 minutes and can be triggered manually. When the feed changes, it generates PDFs and deploys them to GitHub Pages.
 
+The workflow keeps no state in git and has read-only repository access. Each deploy publishes the
+feed's hash as `feed_hash.txt` on the site, and the `check` job compares the live feed against it.
+A 404 (nothing published yet) counts as changed; any other error fails the run.
+
 Trigger manually with force regeneration:
 **Actions → Generate FPO Flyers → Run workflow → check "Force regeneration"**
 
 ### Scheduled-workflow deactivation
 
 GitHub disables scheduled workflows after 60 days without repository activity.
-The feed can sit unchanged for an entire summer, producing no commits, so the
-`check` job pushes a dated no-op commit to `.keepalive` once the last commit is
-50 days old.
+The feed can sit unchanged for an entire summer, producing no commits, so once
+the last commit is 50 days old the `check` job re-enables the workflow through
+the API (`PUT .../actions/workflows/generate.yml/enable`) on each scheduled run,
+instead of pushing a commit to the protected `main`.
 
 If the workflow is ever disabled anyway, the index page keeps serving the last
 deployed `manifest.json` and reports "No flyers currently available" while
