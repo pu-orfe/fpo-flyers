@@ -15,6 +15,7 @@ class TestParseEventHtml:
 
     def test_extracts_pdf_url(self, sample_event_html):
         import urllib.parse
+
         result = parse_event_html(sample_event_html)
         assert urllib.parse.urlparse(result["dissertation_pdf_url"]).netloc == "www.dropbox.com"
         assert "Thesis-Shange-Tang.pdf" in result["dissertation_pdf_url"]

@@ -38,9 +38,7 @@ def parse_event_html(html: str) -> dict[str, str]:
         result["dissertation_title"] = subtitle.get_text(strip=True)
 
     # Dissertation PDF link from the virtual location field
-    virtual_field = soup.find(
-        class_="field--name-field-ps-events-location-virtual"
-    )
+    virtual_field = soup.find(class_="field--name-field-ps-events-location-virtual")
     if virtual_field:
         link = virtual_field.find("a", href=True)
         if link:

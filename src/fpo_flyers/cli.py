@@ -90,13 +90,9 @@ def main(
                 info = scrape_event_page(event.event_url, extra_headers)
                 event.dissertation_title = info["dissertation_title"]
                 event.dissertation_pdf_url = info["dissertation_pdf_url"]
-                logger.debug(
-                    "  Title: %s", event.dissertation_title or "(not found)"
-                )
+                logger.debug("  Title: %s", event.dissertation_title or "(not found)")
             except Exception:
-                logger.warning(
-                    "  Could not scrape event page: %s", event.event_url
-                )
+                logger.warning("  Could not scrape event page: %s", event.event_url)
 
         pdf_path = render_pdf(event, output_dir)
         html_path = render_html_flyer(event, output_dir)

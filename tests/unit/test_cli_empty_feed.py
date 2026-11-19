@@ -18,12 +18,7 @@ from click.testing import CliRunner
 from fpo_flyers.cli import main
 from fpo_flyers.feed import compute_feed_hash
 
-EMPTY_FEED = (
-    "BEGIN:VCALENDAR\r\n"
-    "VERSION:2.0\r\n"
-    "PRODID:-//test//EN\r\n"
-    "END:VCALENDAR\r\n"
-)
+EMPTY_FEED = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nEND:VCALENDAR\r\n"
 
 
 def _run(tmp_path: Path):

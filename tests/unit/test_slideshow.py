@@ -26,10 +26,10 @@ def test_flyers_render_at_a_fixed_viewport_and_are_scaled(html):
     A constant viewport plus a transform keeps the clamps evaluating identically, which is
     what holds the headline at ~7.8% of flyer width - the printed proportion.
     """
-    assert "width: 850px" in html and "height: 1100px" in html, \
+    assert "width: 850px" in html and "height: 1100px" in html, (
         "the flyer viewport is no longer fixed; clamp floors will distort small boards"
-    assert "transform: scale(var(--scale" in html, \
-        "flyers are being resized rather than scaled"
+    )
+    assert "transform: scale(var(--scale" in html, "flyers are being resized rather than scaled"
 
 
 def test_scale_never_exceeds_one(html):
@@ -43,16 +43,18 @@ def test_the_grid_is_computed_not_fixed(html):
     """Three across is not always best: nine flyers are 39% larger as 5x2 than as 3x3,
     because a 3x3 cell is height-limited and wastes width."""
     assert "function bestGrid" in html
-    assert "for (var cols = 1; cols <= n; cols++)" in html, \
+    assert "for (var cols = 1; cols <= n; cols++)" in html, (
         "the column count is fixed again; flyers will be smaller than they need to be"
+    )
 
 
 def test_past_examinations_are_filtered(html):
     """The live page was showing an FPO three weeks past, because the manifest carried no
     dates. A public display doing that is worse than the page it replaced."""
     assert "function upcoming" in html
-    assert "GRACE_MS" in html, \
+    assert "GRACE_MS" in html, (
         "no grace period; an examination in progress would drop off the board"
+    )
 
 
 def test_undated_entries_are_kept_not_dropped(html):
@@ -75,10 +77,11 @@ def test_missing_flyers_are_dropped_before_rendering(html):
     assert "function existing" in html
     assert "method: 'HEAD'" in html
     # A network failure must not empty the board - only a definite HTTP error drops a flyer.
-    block = html[html.index("function existing"):]
-    block = block[:block.index("fetch('manifest.json')")]
-    assert "return e; })" in block or "return e;" in block, \
+    block = html[html.index("function existing") :]
+    block = block[: block.index("fetch('manifest.json')")]
+    assert "return e; })" in block or "return e;" in block, (
         "a failed request drops the flyer; a network blip would empty the board"
+    )
 
 
 def test_the_cropped_top_band_is_honoured(html):

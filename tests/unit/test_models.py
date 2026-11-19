@@ -44,15 +44,11 @@ class TestFPOEvent:
         assert event.formatted_time == "1:00 pm"
 
     def test_formatted_time_with_minutes(self):
-        event = _make_event(
-            start=datetime(2026, 3, 2, 18, 30, tzinfo=timezone.utc)
-        )
+        event = _make_event(start=datetime(2026, 3, 2, 18, 30, tzinfo=timezone.utc))
         assert event.formatted_time == "1:30 pm"
 
     def test_formatted_time_morning(self):
-        event = _make_event(
-            start=datetime(2026, 3, 2, 15, 0, tzinfo=timezone.utc)
-        )
+        event = _make_event(start=datetime(2026, 3, 2, 15, 0, tzinfo=timezone.utc))
         assert event.formatted_time == "10:00 am"
 
     def test_formatted_location(self):
@@ -75,16 +71,11 @@ class TestFPOEvent:
                 CommitteeMember("Jason Klusowski"),
             ]
         )
-        expected = (
-            "Professors Jianqing Fan, (Chair)\n"
-            "Elizaveta Rebrova, and Jason Klusowski"
-        )
+        expected = "Professors Jianqing Fan, (Chair)\nElizaveta Rebrova, and Jason Klusowski"
         assert event.committee_text == expected
 
     def test_committee_text_single(self):
-        event = _make_event(
-            committee=[CommitteeMember("Jianqing Fan", is_chair=True)]
-        )
+        event = _make_event(committee=[CommitteeMember("Jianqing Fan", is_chair=True)])
         assert event.committee_text == "Professor Jianqing Fan, (Chair)"
 
     def test_committee_text_empty(self):
