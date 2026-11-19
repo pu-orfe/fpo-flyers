@@ -11,10 +11,11 @@ on:
   schedule:
     - cron: "*/30 * * * *"
 
+# main is protected by a ruleset that requires CI, and the workflow token cannot
+# bypass it, so this workflow never pushes: the feed hash is published with the
+# site, and the keepalive uses the API. Jobs add only the permissions they need.
 permissions:
-  contents: write
-  pages: write
-  id-token: write
+  contents: read
 
 concurrency:
   group: "pages"
@@ -25,6 +26,10 @@ jobs:
   check:
     if: ${{ inputs.force != true }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read # find the site URL
+      actions: write # keepalive re-enables this workflow
     outputs:
       changed: ${{ steps.hash.outputs.changed }}
     steps:
@@ -35,15 +40,25 @@ jobs:
         id: hash
         env:
           ICS_FEED_URL: ${{ vars.ICS_FEED_URL }}
+          GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           FEED_URL="${ICS_FEED_URL:-https://orfe.princeton.edu/feeds/events/ical.ics?tid=491}"
           # Hash must match Python's compute_feed_hash():
           #   filter DTSTAMP lines, strip \r, join with \n (no trailing newline), SHA-256
-          CURRENT=$(curl -fsSL "$FEED_URL" | tr -d '\r' | grep -v '^DTSTAMP' | perl -pe 'chomp if eof' | sha256sum | cut -d' ' -f1)
-          STORED=""
-          if [ -f .feed_hash ]; then
-            STORED=$(tr -d '[:space:]' < .feed_hash)
-          fi
+          FEED=$(curl -fsSL "$FEED_URL")
+          CURRENT=$(printf '%s\n' "$FEED" | tr -d '\r' | { grep -v '^DTSTAMP' || true; } \
+            | perl -pe 'chomp if eof' | sha256sum | cut -d' ' -f1)
+
+          # The last deployed hash is published with the site (see "Build site").
+          PAGES_URL=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq .html_url)
+          STATUS=$(curl -sS -o published_hash.txt -w '%{http_code}' "${PAGES_URL%/}/feed_hash.txt")
+          case "$STATUS" in
+            200) STORED=$(tr -d '[:space:]' < published_hash.txt) ;;
+            404) STORED=""; echo "No published hash yet." ;;
+            *) echo "::error::Fetching the published hash returned HTTP $STATUS"; exit 1 ;;
+          esac
+
           echo "current=$CURRENT"
           echo "stored=$STORED"
           if [ "$CURRENT" = "$STORED" ]; then
@@ -55,23 +70,22 @@ jobs:
           fi
 
       # GitHub disables scheduled workflows after 60 days without repository
-      # activity. The feed can sit unchanged for a whole summer, so push a
-      # dated no-op commit before that window closes.
+      # activity, and the feed can sit unchanged for a whole summer. Re-enabling
+      # the workflow through the API resets that without a commit to main.
       - name: Keep scheduled workflow alive
         if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           AGE_DAYS=$(( ( $(date -u +%s) - $(git log -1 --format=%ct) ) / 86400 ))
           echo "Days since last commit: $AGE_DAYS"
           if [ "$AGE_DAYS" -lt 50 ]; then
             echo "Recent activity; no keepalive needed."
             exit 0
           fi
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          date -u +"%Y-%m-%dT%H:%M:%SZ" > .keepalive
-          git add .keepalive
-          git commit -m "[skip ci] Keepalive commit to prevent workflow deactivation"
-          git push
+          gh api --method PUT "repos/$GITHUB_REPOSITORY/actions/workflows/generate.yml/enable"
+          echo "Re-enabled the workflow to reset the inactivity timer."
 
   # ── Full generation (only when feed changed or force) ──────────
   generate:
@@ -115,7 +129,7 @@ jobs:
           ICS_FEED_URL: ${{ vars.ICS_FEED_URL }}
           BYPASS_HEADER: ${{ secrets.BYPASS_HEADER }}
         run: |
-          set -- --output-dir output --verbose --force
+          set -- --output-dir output --hash-file output/feed_hash.txt --verbose --force
           if [ -n "$ICS_FEED_URL" ]; then
             set -- "$@" --feed-url "$ICS_FEED_URL"
           fi
@@ -124,17 +138,6 @@ jobs:
           fi
           fpo-flyers "$@"
 
-      # Commit the hash even when the feed has no events. Otherwise the stored
-      # hash never matches an empty feed and every scheduled run redeploys.
-      - name: Commit hash file
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .feed_hash
-          git diff --cached --quiet || git commit -m "[skip ci] Update feed hash"
-          git pull --rebase
-          git push
-
       - name: Build site
         run: |
           mkdir -p _site
@@ -142,6 +145,8 @@ jobs:
           cp docs/style.css _site/
           cp docs/slideshow.html _site/
           cp docs/view.html _site/
+          # Published so the check job can tell whether the feed changed since this deploy.
+          cp output/feed_hash.txt _site/feed_hash.txt
           cp output/*.pdf _site/ 2>/dev/null || true
           cp output/*.html _site/ 2>/dev/null || true
           # The manifest is written by the generator now (src/fpo_flyers/manifest.py), so it

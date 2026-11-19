@@ -57,11 +57,10 @@ def test_blocks_force_push_and_deletion(ruleset: dict) -> None:
     _rule(ruleset, "deletion")
 
 
-def test_only_github_actions_bypasses(ruleset: dict) -> None:
-    """generate.yml pushes the feed hash and keepalive commits straight to main."""
-    assert ruleset["bypass_actors"] == [
-        {"actor_id": GITHUB_ACTIONS_APP_ID, "actor_type": "Integration", "bypass_mode": "always"}
-    ]
+def test_nothing_bypasses(ruleset: dict) -> None:
+    """generate.yml no longer pushes to main, so nothing needs an exemption.
+    (GitHub also rejects the built-in GitHub Actions app as a bypass actor.)"""
+    assert ruleset["bypass_actors"] == []
 
 
 # --- the apply script -------------------------------------------------------

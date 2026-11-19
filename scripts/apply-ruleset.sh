@@ -2,8 +2,8 @@
 # Create or update the main-branch ruleset from .github/rulesets/main.json.
 #
 # The ruleset requires the CI jobs (lint, test) to pass before main moves, and
-# blocks force-pushes and deletion. The GitHub Actions app may bypass it so
-# generate.yml can still push feed-hash and keepalive commits.
+# blocks force-pushes and deletion. Nothing bypasses it: generate.yml keeps no
+# state in git, so it never needs to push.
 #
 # Usage: scripts/apply-ruleset.sh [--dry-run]
 #   REPO=owner/name overrides the repository (default: the current gh repo).
