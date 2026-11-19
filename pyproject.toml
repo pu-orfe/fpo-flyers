@@ -27,6 +27,8 @@ dev = [
     "ruff>=0.17",
     "mypy>=1.13",
     "types-PyYAML>=6.0",
+    # Lockfile freshness check in CI; see README "Updating dependencies".
+    "uv>=0.13",
 ]
 
 [project.scripts]

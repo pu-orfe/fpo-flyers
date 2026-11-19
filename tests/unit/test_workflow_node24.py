@@ -1,4 +1,4 @@
-"""Every JavaScript action in generate.yml must run natively on Node 24.
+"""Every JavaScript action in every workflow must run natively on Node 24.
 
 GitHub deprecated Node 20 for Actions. Majors below these target Node 20 and
 are force-run on Node 24 with a warning on every run.
@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-WORKFLOW = Path(__file__).resolve().parents[2] / ".github" / "workflows" / "generate.yml"
+WORKFLOWS = sorted((Path(__file__).resolve().parents[2] / ".github" / "workflows").glob("*.yml"))
 
 # First major of each action that targets Node 24.
 NODE24_MIN_MAJOR = {
@@ -23,8 +23,13 @@ NODE24_MIN_MAJOR = {
 
 
 def _uses() -> list[str]:
-    wf = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
-    return [step["uses"] for job in wf["jobs"].values() for step in job["steps"] if "uses" in step]
+    return [
+        step["uses"]
+        for path in WORKFLOWS
+        for job in yaml.safe_load(path.read_text(encoding="utf-8"))["jobs"].values()
+        for step in job["steps"]
+        if "uses" in step
+    ]
 
 
 def test_every_action_is_known() -> None:
